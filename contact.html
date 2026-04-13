@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Through the Void</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Noto+Serif+JP:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --color-neon-blue: #00d4ff;
+      --color-neon-purple: #b200ff;
+      --color-neon-pink: #ff006a;
+      --color-cursed-red: #ff2b2b;
+      --color-void: #030007;
+      --color-surface: rgba(5, 0, 15, 0.85);
+      --color-text: #e8e0f5;
+      --color-muted: #7a6a99;
+      --glow-blue: 0 0 8px #00d4ff, 0 0 20px #00d4ff55, 0 0 40px #00d4ff22;
+      --glow-purple: 0 0 8px #b200ff, 0 0 30px #b200ff55;
+      --glow-red: 0 0 8px #ff2b2b, 0 0 25px #ff2b2b55;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--color-void);
+      color: var(--color-text);
+      font-family: 'Noto Serif JP', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ── VOID BACKGROUND ── */
+    .void-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(178,0,255,0.13) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 90%, rgba(0,212,255,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,0,106,0.06) 0%, transparent 70%),
+        #030007;
+      overflow: hidden;
+    }
+
+    /* Floating cursed energy orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      animation: drift linear infinite;
+      opacity: 0.5;
+    }
+    .orb-1 { width: 300px; height: 300px; background: rgba(178,0,255,0.25); top: -100px; left: -80px; animation-duration: 18s; }
+    .orb-2 { width: 200px; height: 200px; background: rgba(0,212,255,0.2); bottom: 10%; right: -60px; animation-duration: 22s; animation-delay: -8s; }
+    .orb-3 { width: 150px; height: 150px; background: rgba(255,43,43,0.18); top: 50%; left: 30%; animation-duration: 15s; animation-delay: -4s; }
+
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -40px) scale(1.08); }
+      66% { transform: translate(-20px, 30px) scale(0.95); }
+    }
+
+    /* Ink splatter SVG overlay */
+    .ink-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.06;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800'%3E%3Ccircle cx='120' cy='80' r='60' fill='%23b200ff'/%3E%3Ccircle cx='600' cy='200' r='40' fill='%2300d4ff'/%3E%3Ccircle cx='300' cy='600' r='80' fill='%23b200ff'/%3E%3Ccircle cx='700' cy='700' r='50' fill='%2300d4ff'/%3E%3Ccircle cx='50' cy='500' r='30' fill='%23ff2b2b'/%3E%3Cpath d='M400 100 Q450 50 500 150 Q420 180 400 100Z' fill='%23b200ff'/%3E%3Cpath d='M200 400 Q180 350 250 370 Q230 420 200 400Z' fill='%2300d4ff'/%3E%3C/svg%3E");
+      background-size: cover;
+    }
+
+    /* ── SCAN LINES ── */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.07) 2px,
+        rgba(0,0,0,0.07) 4px
+      );
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      position: relative;
+      z-index: 10;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    /* ── KANJI WATERMARK ── */
+    .kanji-bg {
+      position: fixed;
+      z-index: 3;
+      font-size: clamp(180px, 30vw, 360px);
+      color: rgba(178,0,255,0.04);
+      font-family: 'Noto Serif JP', serif;
+      font-weight: 700;
+      user-select: none;
+      pointer-events: none;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      letter-spacing: -10px;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .eyebrow {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      color: var(--color-neon-purple);
+      text-transform: uppercase;
+      text-shadow: var(--glow-purple);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    /* ── CONTACT SECTION ── */
+    .contact-section {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .contact-section h2 {
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #fff 0%, var(--color-neon-blue) 40%, var(--color-neon-purple) 80%, var(--color-neon-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 24px;
+      line-height: 1.2;
+    }
+
+    /* ── NEON DIVIDER ── */
+    .neon-divider {
+      border: none;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-neon-purple), var(--color-neon-blue), var(--color-neon-purple), transparent);
+      box-shadow: 0 0 12px rgba(178,0,255,0.6), 0 0 30px rgba(0,212,255,0.3);
+      margin: 0 auto 10px;
+      width: 70%;
+      position: relative;
+    }
+
+    .neon-divider::before,
+    .neon-divider::after {
+      content: '✦';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.65rem;
+      color: var(--color-neon-purple);
+      text-shadow: var(--glow-purple);
+    }
+    .neon-divider::before { left: -14px; }
+    .neon-divider::after  { right: -14px; }
+
+    /* ── DOMAIN CARD ── */
+    .domain-card {
+      background: rgba(5, 0, 18, 0.75);
+      border: 1px solid rgba(178,0,255,0.25);
+      border-radius: 4px;
+      padding: 40px 36px 36px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      box-shadow:
+        0 0 0 1px rgba(0,212,255,0.08),
+        0 4px 40px rgba(178,0,255,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .domain-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--color-neon-purple) 30%, var(--color-neon-blue) 70%, transparent);
+      box-shadow: 0 0 10px rgba(178,0,255,0.8);
+    }
+
+    /* corner runes */
+    .domain-card::after {
+      content: '域  呪  縛  術';
+      position: absolute;
+      bottom: 14px; right: 18px;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.5em;
+      color: rgba(178,0,255,0.2);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* ── FORM ── */
+    form {
+      max-width: 600px;
+      margin: 30px auto;
+      display: grid;
+      gap: 15px;
+    }
+
+    .field-wrap {
+      position: relative;
+    }
+
+    .field-wrap label {
+      display: block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--color-neon-blue);
+      text-shadow: var(--glow-blue);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1px solid rgba(0,212,255,0.3);
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      border-radius: 2px;
+      caret-color: var(--color-neon-blue);
+    }
+
+    input[type="text"]::placeholder,
+    input[type="email"]::placeholder,
+    textarea::placeholder {
+      color: var(--color-muted);
+      font-style: italic;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    textarea:focus {
+      border-color: var(--color-neon-purple);
+      box-shadow: 0 0 0 2px rgba(178,0,255,0.15), var(--glow-purple);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 130px;
+    }
+
+    /* ── SUBMIT BUTTON ── */
+    .nav-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+      padding: 14px 36px;
+      background: transparent;
+      border: 1px solid var(--color-neon-purple);
+      color: #fff;
+      font-family: 'Cinzel Decorative', cursive;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.35s;
+      text-transform: uppercase;
+      border-radius: 2px;
+      text-shadow: 0 0 8px rgba(178,0,255,0.5);
+      box-shadow: 0 0 12px rgba(178,0,255,0.2), inset 0 0 20px rgba(178,0,255,0.03);
+    }
+
+    .nav-button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(178,0,255,0.18), rgba(0,212,255,0.08));
+      transform: translateX(-100%);
+      transition: transform 0.4s ease;
+    }
+
+    .nav-button:hover::before { transform: translateX(0); }
+
+    .nav-button:hover {
+      border-color: var(--color-neon-blue);
+      box-shadow: var(--glow-blue), 0 0 30px rgba(178,0,255,0.25);
+      color: var(--color-neon-blue);
+      text-shadow: var(--glow-blue);
+      transform: translateY(-2px);
+    }
+
+    .nav-button:active { transform: translateY(0); }
+
+    .btn-icon {
+      font-size: 1rem;
+      transition: transform 0.3s;
+    }
+    .nav-button:hover .btn-icon { transform: rotate(15deg) scale(1.2); }
+
+    /* ── SOCIAL LINKS ROW ── */
+    .social-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 32px;
+      flex-wrap: wrap;
+    }
+
+    .social-link {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      text-decoration: none;
+      padding: 8px 16px;
+      border: 1px solid rgba(122,106,153,0.3);
+      border-radius: 2px;
+      transition: all 0.3s;
+    }
+    .social-link:hover {
+      color: var(--color-neon-purple);
+      border-color: rgba(178,0,255,0.4);
+      box-shadow: 0 0 12px rgba(178,0,255,0.15);
+    }
+
+    /* ── STATUS BADGE ── */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00ff88;
+      box-shadow: 0 0 6px #00ff88, 0 0 14px #00ff8866;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .status-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--color-muted);
+      text-transform: uppercase;
+    }
+
+    /* ── REVEAL ANIMATION ── */
+    .reveal {
+      animation: revealUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes revealUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SUCCESS FLASH ── */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: rgba(5,0,18,0.95);
+      border: 1px solid var(--color-neon-purple);
+      box-shadow: var(--glow-purple);
+      color: #fff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      padding: 14px 28px;
+      border-radius: 3px;
+      z-index: 999;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s;
+      opacity: 0;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Domain expansion flash on submit */
+    .domain-flash {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(178,0,255,0.3) 0%, transparent 70%);
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+    }
+    .domain-flash.active {
+      opacity: 1;
+      animation: flashOut 1s ease-out forwards;
+    }
+    @keyframes flashOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @media (max-width: 500px) {
+      .domain-card { padding: 28px 20px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background layers -->
+  <div class="void-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="ink-overlay"></div>
+  <div class="scanlines"></div>
+  <div class="kanji-bg" aria-hidden="true">呪術</div>
+  <div class="domain-flash" id="domainFlash"></div>
+
+  <main>
+    <div class="page-header">
+      <span class="eyebrow">— Jujutsu High · Cursed Communications —</span>
+    </div>
+
+    <section id="contact" class="contact-section content-section reveal">
+      <h2>Contact Through the Void</h2>
+      <hr class="neon-divider">
+
+      <div class="domain-card">
+        <form style="max-width: 600px; margin: 30px auto; display: grid; gap: 18px;" id="contactForm" onsubmit="handleSubmit(event)">
+
+          <div class="field-wrap">
+            <label for="name">Sorcerer Name</label>
+            <input id="name" type="text" placeholder="Your Name" required
+              style="padding: 10px; border: 1px solid var(--color-neon-blue); background: rgba(0,0,0,0.5); color: #fff;">
+          </div>
+
+          <div class="field-wrap">
+            <label for="email">Cursed Signal</label>
+            <input id="email" type="email" placeholder="Your Email" required
+              style="padding: 10px; border: 1px solid var(--color-neon-blue); background: rgba(0,0,0,0.5); color: #fff;">
+          </div>
+
+          <div class="field-wrap">
+            <label for="msg">Cursed Transmission</label>
+            <textarea id="msg" placeholder="Message" rows="5" required
+              style="padding: 10px; border: 1px solid var(--color-neon-blue); background: rgba(0,0,0,0.5); color: #fff;"></textarea>
+          </div>
+
+          <div style="justify-self: start;">
+            <button type="submit" class="nav-button">
+              <span class="btn-icon">⬡</span>
+              Expand Domain
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Status -->
+      <div class="status-badge">
+        <div class="status-dot"></div>
+        <span class="status-text">Cursed energy channel active</span>
+      </div>
+
+      <!-- Social links -->
+      <div class="social-row">
+        <a href="#" class="social-link">𝕏 Twitter</a>
+        <a href="#" class="social-link">GitHub</a>
+        <a href="#" class="social-link">Discord</a>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast">⬡ Domain Expansion Complete — Message received.</div>
+
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+
+      // Domain flash
+      const flash = document.getElementById('domainFlash');
+      flash.classList.add('active');
+      setTimeout(() => flash.classList.remove('active'), 1000);
+
+      // Toast
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+
+      // Reset
+      setTimeout(() => e.target.reset(), 400);
+    }
+  </script>
+</body>
+</html>

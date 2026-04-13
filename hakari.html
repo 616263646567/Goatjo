@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDLE DEATH GAMBLE: THE IMMORTAL KASHIMO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00ffff;
+            --neon-gold: #ffd700;
+            --deep-red: #ff0044;
+            --glass-bg: rgba(5, 5, 5, 0.85);
+        }
+
+        body {
+            margin: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Rajdhani', sans-serif;
+            user-select: none;
+            cursor: crosshair;
+            color: #fff;
+        }
+
+        /* --- NAVIGATION --- */
+        .nav-link {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            color: var(--neon-green);
+            text-decoration: none;
+            border: 2px solid var(--neon-green);
+            padding: 14px 28px;
+            font-size: 0.9rem;
+            z-index: 10000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            font-family: 'Orbitron';
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            transition: 0.4s;
+            clip-path: polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%);
+        }
+        .nav-link:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 40px var(--neon-green);
+            transform: translateX(10px);
+        }
+
+        /* --- MODERNIZED HUD --- */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+        }
+
+        #slot-display {
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 30px;
+            background: rgba(10, 10, 10, 0.9);
+            padding: 30px; 
+            border-top: 2px solid var(--neon-blue);
+            border-bottom: 5px solid var(--neon-green);
+            border-radius: 4px;
+            box-shadow: 0 30px 60px rgba(0,0,0,1);
+        }
+
+        .reel {
+            width: 120px; height: 160px; background: linear-gradient(180deg, #0a0a12 0%, #000 100%);
+            border: 2px solid var(--neon-blue);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3.8rem; color: #111; font-family: 'Black Ops One', sans-serif;
+            overflow: hidden; position: relative;
+            box-shadow: inset 0 0 20px rgba(0,255,136,0.1);
+        }
+        .reel span { text-shadow: 0 0 20px currentColor; }
+        
+        .reel.spinning span { 
+            animation: slotHyperBlur 0.08s infinite linear;
+            filter: blur(15px); 
+            color: var(--neon-gold);
+        }
+
+        @keyframes slotHyperBlur {
+            0% { transform: translateY(-200%); }
+            100% { transform: translateY(200%); }
+        }
+
+        /* --- PROGRESS BARS --- */
+        #hud-bottom {
+            position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+            width: 600px;
+        }
+        
+        .bar-label { 
+            color: var(--neon-green); font-size: 0.9rem; margin-bottom: 10px; 
+            text-shadow: 0 0 15px var(--neon-green); letter-spacing: 8px; 
+            font-weight: 900; text-transform: uppercase; text-align: center;
+        }
+        
+        .progress-frame {
+            width: 100%; height: 15px; background: #111; 
+            border-radius: 2px; position: relative; overflow: hidden;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            transform: skewX(-20deg);
+        }
+        
+        #energy-fill {
+            width: 0%; height: 100%; 
+            background: linear-gradient(90deg, #00ff88, #00ffff);
+            box-shadow: 0 0 30px var(--neon-green); 
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- OVERLAYS --- */
+        #status-alert {
+            position: absolute; top: 250px; width: 100%; text-align: center;
+            font-size: 6rem; color: #fff; font-weight: 900; font-family: 'Orbitron';
+            text-shadow: 0 0 50px rgba(255,255,255,0.8);
+            opacity: 0; transform: scale(0) rotate(-10deg);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #status-alert.active { opacity: 1; transform: scale(1) rotate(0deg); }
+
+        #jackpot-timer {
+            position: absolute; top: 180px; left: 50%; transform: translateX(-50%);
+            color: var(--neon-gold); font-size: 4rem; display: none; 
+            font-weight: 900; font-family: 'Orbitron'; text-shadow: 0 0 30px gold;
+        }
+
+        .game-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20000;
+        }
+        .hidden { display: none !important; }
+
+        .big-action-btn {
+            background: transparent; color: var(--neon-green); border: 3px solid var(--neon-green);
+            padding: 25px 80px; font-size: 2.5rem; font-family: 'Orbitron';
+            cursor: pointer; margin-top: 50px; transition: 0.4s;
+            text-transform: uppercase; letter-spacing: 12px; font-weight: 900;
+            box-shadow: inset 0 0 10px var(--neon-green);
+        }
+        .big-action-btn:hover { background: var(--neon-green); color: #000; box-shadow: 0 0 80px var(--neon-green); }
+
+        canvas { filter: contrast(1.1) brightness(1.1); }
+    </style>
+</head>
+<body>
+
+    <a href="playground.html" class="nav-link">⬅ EXIT DOMAIN</a>
+
+    <div id="ui-layer">
+        <div id="slot-display">
+            <div class="reel" id="reel1"><span>?</span></div>
+            <div class="reel" id="reel2"><span>?</span></div>
+            <div class="reel" id="reel3"><span>?</span></div>
+        </div>
+        
+        <div id="jackpot-timer">04:11</div>
+        <div id="status-alert">JACKPOT</div>
+
+        <div id="hud-bottom">
+            <div class="bar-label">Cursed Energy · Domain Luck</div>
+            <div class="progress-frame"><div id="energy-fill"></div></div>
+        </div>
+        <div id="survival-timer" style="position:absolute; top:50px; right:50px; color:var(--neon-green); font-size:2rem; font-family:Orbitron; font-weight:900; letter-spacing:4px;">0:00</div>
+        <div id="hitbox-hint" style="position:absolute; bottom:100px; right:25px; color:rgba(0,255,136,0.6); font-size:0.75rem; font-family:Orbitron;">[H] Toggle Hitbox</div>
+    </div>
+
+    <div id="start-screen" class="game-overlay">
+        <h1 style="color:var(--neon-green); font-size: 5rem; letter-spacing: 10px; margin-bottom: 10px;">IDLE DEATH GAMBLE</h1>
+        <p style="color: #666; font-size: 1.2rem; letter-spacing: 5px;">SURVIVE THE CURSED WAVES · SPACE = SPIN</p>
+        <button class="big-action-btn" onclick="Engine.init()">EXPAND DOMAIN</button>
+    </div>
+
+    <div id="death-screen" class="game-overlay hidden">
+        <h1 style="color: var(--deep-red); font-size: 6rem; letter-spacing: 15px;">DOMAIN COLLAPSED</h1>
+        <p style="color: #888; font-size: 1.2rem; margin-top: 10px;">Cursed energy depleted</p>
+        <p id="survival-time-display" style="color: var(--neon-gold); font-size: 2.5rem; font-family: Orbitron; margin-top: 20px;">You survived 0:00</p>
+        <button class="big-action-btn" onclick="Engine.init()">EXPAND DOMAIN AGAIN</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // --- GLOBAL SETTINGS ---
+    const GAME_CONFIG = {
+        BOSS_TOTAL_HP: 150,        // Kashimo takes 6 hits to defeat
+        BOSS_MIN_HITS: 5,          // HARD CAP: Takes 5+ hits minimum
+        BOSS_DAMAGE_TAKEN: 25,     // Each punch does 25 damage (150/25 = 6 hits)
+        PLAYER_START_HP: 200,
+        FLY_STALK_SPEED: 1.2,      // Slower approach
+        FLY_DASH_SPEED: 5.5,       // Slower lunges
+        ATTACK_RANGE: 220,       // Bigger reach so you can clear curses from further
+        BOSS_ATTACK_HITBOX_EXTRA: 90,  // Kashimo easier to hit (larger hurt box)
+        PLAYER_HITBOX_OFFSET_Y: 28,  // Hitbox center shifted up (higher on sprite)
+        PARTICLE_COUNT: 40
+    };
+
+    // JJK-themed slot symbols (numbers + emojis)
+    const SLOT_SYMBOLS = ['1','2','3','4','5','6','7','8','9','⚡','💀','👁','🖐','◆','✖'];
+
+    const resize = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    // --- SPRITE LOADING ---
+    const bossImg = new Image(); bossImg.src = 'assets/images/kashimo.png'; 
+    const playerImg = new Image(); playerImg.src = 'assets/images/hakari.png';
+
+    const AudioSystem = {
+        ctx: null,
+        bgm: new Audio('assets/audio/tuka_donka.mp3'),
+        unlocked: false,
+        init() {
+            if(this.unlocked) return;
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.unlocked = true;
+        },
+        tone(f, t, d, v) {
+            if(!this.unlocked) return;
+            const o = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            o.type = t; o.frequency.value = f;
+            g.gain.setValueAtTime(v, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + d);
+            o.connect(g); g.connect(this.ctx.destination);
+            o.start(); o.stop(this.ctx.currentTime + d);
+        }
+    };
+
+    const Engine = {
+        alive: false,
+        jackpot: false,
+        timer: 0,
+        energy: 60,
+        hp: GAME_CONFIG.PLAYER_START_HP,
+        survivalTime: 0,
+        showHitbox: false,
+        player: { x: 0, y: 0, s: 50, rot: 0 },
+        mouse: { x: 0, y: 0 },
+        entities: [],
+        vfx: [],
+        txt: [],
+        bolts: [],
+        spinning: false,
+        shake: 0,
+        invincible: 0,
+        combo: 0,
+        comboTime: 0,
+        reelSpinIntervals: [null, null, null],
+
+        init() {
+            AudioSystem.init();
+            AudioSystem.bgm.loop = true;
+            AudioSystem.bgm.volume = 0.5;
+            AudioSystem.bgm.play().catch(() => {});
+            
+            this.alive = true;
+            this.survivalTime = 0;
+            this.hp = GAME_CONFIG.PLAYER_START_HP;
+            this.energy = 50;
+            this.entities = [];
+            this.vfx = [];
+            this.txt = [];
+            this.bolts = [];
+            this.jackpot = false;
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('death-screen').classList.add('hidden');
+            
+            this.loop();
+            if(this.spawnTimer) clearInterval(this.spawnTimer);
+            this.spawnTimer = setInterval(() => this.spawn(), 1200);
+        },
+
+        spawn() {
+            if(!this.alive) return;
+            this.createEntity(false);
+            if(Math.random() > 0.6) this.createEntity(false);
+        },
+
+        createEntity(isBoss) {
+            const edge = Math.floor(Math.random() * 4);
+            let x, y;
+            if(edge === 0) { x = Math.random()*canvas.width; y = -100; }
+            else if(edge === 1) { x = canvas.width+100; y = Math.random()*canvas.height; }
+            else if(edge === 2) { x = Math.random()*canvas.width; y = canvas.height+100; }
+            else { x = -100; y = Math.random()*canvas.height; }
+
+            this.entities.push({
+                x, y, isBoss,
+                hp: isBoss ? GAME_CONFIG.BOSS_TOTAL_HP : 1,
+                maxHp: isBoss ? GAME_CONFIG.BOSS_TOTAL_HP : 1,
+                size: isBoss ? 90 : 25,
+                phase: 'stalk',
+                timer: 0,
+                pulse: 0,
+                jackpotClashes: 0  // in jackpot mode, boss needs 2 clashes to die
+            });
+        },
+
+        loop() {
+            if(!this.alive) return;
+            this.update();
+            this.draw();
+            requestAnimationFrame(() => this.loop());
+        },
+
+        update() {
+            const lerp = this.jackpot ? 0.28 : 0.18;
+            this.player.x += (this.mouse.x - this.player.x) * lerp;
+            this.player.y += (this.mouse.y - this.player.y) * lerp;
+            this.player.rot += 0.05;
+
+            if(this.shake > 0) this.shake *= 0.9;
+
+            if(this.invincible > 0) {
+                this.invincible -= 0.016;
+                if(this.invincible < 0) this.invincible = 0;
+            }
+            if(this.comboTime > 0) {
+                this.comboTime -= 0.016;
+                if(this.comboTime <= 0) { this.combo = 0; }
+            }
+            if(this.jackpot) {
+                this.energy = 100;
+                this.timer -= 0.016;
+                document.getElementById('jackpot-timer').innerText = this.timer.toFixed(2);
+                if(this.timer <= 0) this.endJackpot();
+            } else {
+                this.survivalTime += 0.016;
+                const m = Math.floor(this.survivalTime / 60);
+                const s = Math.floor(this.survivalTime % 60);
+                document.getElementById('survival-timer').innerText = m + ':' + (s < 10 ? '0' : '') + s;
+                if(this.hp < GAME_CONFIG.PLAYER_START_HP) this.hp += 0.05;
+                if(this.hp <= 0) this.endGame();
+            }
+
+            document.getElementById('energy-fill').style.width = this.energy + '%';
+
+            // ENTITY LOGIC (player hitbox centered higher on Hakari)
+            const playerHitboxY = this.player.y - GAME_CONFIG.PLAYER_HITBOX_OFFSET_Y;
+            for(let i = this.entities.length - 1; i >= 0; i--) {
+                let e = this.entities[i];
+                const dx = this.player.x - e.x;
+                const dy = playerHitboxY - e.y;
+                const dist = Math.hypot(dx, dy);
+                const angle = Math.atan2(dy, dx);
+                
+                e.pulse += 0.15;
+
+                if(!e.isBoss) {
+                    if(e.phase === 'stalk') {
+                        e.x += Math.cos(angle) * GAME_CONFIG.FLY_STALK_SPEED;
+                        e.y += Math.sin(angle) * GAME_CONFIG.FLY_STALK_SPEED;
+                        if(dist < 300) { e.phase = 'lunge'; e.timer = 30; }
+                    } else {
+                        e.x += Math.cos(angle) * GAME_CONFIG.FLY_DASH_SPEED;
+                        e.y += Math.sin(angle) * GAME_CONFIG.FLY_DASH_SPEED;
+                        e.timer--;
+                        if(e.timer <= 0) e.phase = 'stalk';
+                    }
+                } else {
+                    e.x += Math.cos(angle) * 3.8;
+                    e.y += Math.sin(angle) * 3.8;
+                    e.timer++;
+                    if(e.timer > 60 && !this.jackpot) {
+                        this.bolts.push({ x: this.player.x, y: this.player.y, life: 40 });
+                        e.timer = 0;
+                    }
+                }
+
+                // COLLISION: Boss only damages you (no remove). Flies damage + remove.
+                if(dist < this.player.s + e.size) {
+                    if(this.jackpot) {
+                        if(e.isBoss) {
+                            e.jackpotClashes = (e.jackpotClashes || 0) + 1;
+                            if(e.jackpotClashes >= 2) {
+                                this.removeEntity(i);
+                                this.pop("KASHIMO DEFEATED", e.x, e.y, 'gold');
+                            } else {
+                                this.pop("CLASH " + e.jackpotClashes + "/2", e.x, e.y, '#ffd700');
+                            }
+                        } else {
+                            this.removeEntity(i);
+                        }
+                    } else if(e.isBoss) {
+                        if(!this.invincible) {
+                            this.hp -= 80;
+                            this.combo = 0;
+                            this.pop("-80", this.player.x, this.player.y, 'red');
+                            this.shake = 20;
+                            this.invincible = 1.2;  // ~1.2s invincibility after boss hit
+                        }
+                        // Do NOT remove Kashimo - he stays in the fight
+                    } else {
+                        if(!this.invincible) {
+                            this.hp -= 15;
+                            this.combo = 0;
+                            this.pop("-15", this.player.x, this.player.y, 'red');
+                            this.shake = 20;
+                            this.invincible = 0.4;  // brief i-frame after fly hit
+                        }
+                        this.removeEntity(i);
+                    }
+                }
+            }
+
+            for(let i = this.bolts.length - 1; i >= 0; i--) {
+                let b = this.bolts[i];
+                b.life--;
+                if(b.life === 10) { 
+                    if(Math.hypot(b.x - this.player.x, b.y - (this.player.y - GAME_CONFIG.PLAYER_HITBOX_OFFSET_Y)) < 80) {
+                        this.hp -= 50;
+                        this.shake = 30;
+                        this.pop("STRIKE", b.x, b.y, 'yellow');
+                    }
+                }
+                if(b.life <= 0) this.bolts.splice(i, 1);
+            }
+
+            this.vfx.forEach((p, idx) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+                if(p.life <= 0) this.vfx.splice(idx, 1);
+            });
+            this.txt.forEach((t, idx) => {
+                t.y -= 1.5; t.life -= 0.015;
+                if(t.life <= 0) this.txt.splice(idx, 1);
+            });
+        },
+
+        removeEntity(idx) {
+            const e = this.entities[idx];
+            if(!e) return;
+            this.burst(e.x, e.y, e.isBoss ? '#00ffff' : '#ff00ff', e.isBoss ? 80 : 20);
+            this.entities.splice(idx, 1);
+        },
+
+        burst(x, y, c, n) {
+            for(let i=0; i<n; i++) {
+                this.vfx.push({
+                    x, y, color: c, life: 1,
+                    vx: (Math.random()-0.5)*30, vy: (Math.random()-0.5)*30
+                });
+            }
+        },
+
+        pop(m, x, y, c) {
+            this.txt.push({ m, x, y, c, life: 1 });
+        },
+
+        attack() {
+            if(!this.alive || this.jackpot) return;
+            let didHit = false;
+            for(let i = this.entities.length-1; i >= 0; i--) {
+                let e = this.entities[i];
+                const attackRange = e.isBoss ? GAME_CONFIG.ATTACK_RANGE + GAME_CONFIG.BOSS_ATTACK_HITBOX_EXTRA : GAME_CONFIG.ATTACK_RANGE;
+                if(Math.hypot(this.mouse.x - e.x, this.mouse.y - e.y) < attackRange) {
+                    if(e.isBoss) {
+                        e.hp -= GAME_CONFIG.BOSS_DAMAGE_TAKEN; 
+                        this.pop(`-${GAME_CONFIG.BOSS_DAMAGE_TAKEN}`, e.x, e.y, '#00ffff');
+                        AudioSystem.tone(80, 'square', 0.25, 0.3);
+                        console.log("Boss HP remaining:", e.hp);
+                    } else {
+                        e.hp--;
+                    }
+                    
+                    didHit = true;
+                    const knock = Math.atan2(e.y - this.player.y, e.x - this.player.x);
+                    e.x += Math.cos(knock) * 50; e.y += Math.sin(knock) * 50;
+                    
+                    if(e.hp <= 0) {
+                        this.energy = Math.min(100, this.energy + (e.isBoss ? 70 : 15));
+                        this.combo++;
+                        this.comboTime = 1.5;
+                        if(this.combo >= 2) this.pop(this.combo + " HIT COMBO", e.x, e.y - 30, '#ffd700');
+                        this.removeEntity(i);
+                        if(e.isBoss) this.pop("KASHIMO DEFEATED", e.x, e.y, 'gold');
+                    }
+                }
+            }
+            if(didHit) this.shake = 12;
+        },
+
+        spin() {
+            if(!this.alive || this.spinning || this.jackpot || this.energy < 10) return;
+            const cost = Math.max(1, Math.floor(this.energy * 0.5));  // 50% of cursed energy
+            this.energy -= cost;
+            this.spinning = true;
+            const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+            reels.forEach(r => r.classList.add('spinning'));
+            [0,1,2].forEach(i => {
+                if(this.reelSpinIntervals[i]) clearInterval(this.reelSpinIntervals[i]);
+                this.reelSpinIntervals[i] = setInterval(() => {
+                    const el = document.getElementById(`reel${i+1}`);
+                    if(el && el.querySelector('span')) el.querySelector('span').textContent = SLOT_SYMBOLS[Math.floor(Math.random()*SLOT_SYMBOLS.length)];
+                }, 90);
+            });
+
+            const dice = Math.random();
+            let res = 'fail';
+            if(dice < 0.2) res = 'jackpot';
+            else if(dice < 0.5) res = 'boss';
+            else if(dice < 0.7) res = 'heal';
+
+            const randomSymbol = () => SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+            const v0 = res === 'jackpot' ? '7' : res === 'boss' ? '⚡' : res === 'heal' ? '❤' : randomSymbol();
+            const v1 = res === 'jackpot' ? '7' : res === 'boss' ? '⚡' : res === 'heal' ? '❤' : randomSymbol();
+            const v2 = res === 'jackpot' ? '7' : res === 'boss' ? '⚡' : res === 'heal' ? '❤' : randomSymbol();
+
+            setTimeout(() => this.stopReel(0, v0), 700);
+            setTimeout(() => this.stopReel(1, v1), 1300);
+            setTimeout(() => this.stopReel(2, v2, res), 1900);
+        },
+
+        stopReel(i, v, res) {
+            if(this.reelSpinIntervals[i]) { clearInterval(this.reelSpinIntervals[i]); this.reelSpinIntervals[i] = null; }
+            const el = document.getElementById(`reel${i+1}`);
+            el.classList.remove('spinning');
+            el.innerHTML = `<span>${v}</span>`;
+            AudioSystem.tone(500, 'sine', 0.1, 0.1);
+            if(i === 2) {
+                this.spinning = false;
+                this.announce(res);
+            }
+        },
+
+        announce(res) {
+            const a = document.getElementById('status-alert');
+            a.className = ''; 
+            
+            if(res === 'jackpot') {
+                this.jackpot = true;
+                this.timer = 18.5;
+                document.getElementById('jackpot-timer').style.display = 'block';
+                a.innerText = "UNLIMITED LUCK";
+                a.style.color = "gold";
+                a.classList.add('active');
+            } else if(res === 'boss') {
+                a.innerText = "CURSED SPARK"; a.style.color = "cyan";
+                this.createEntity(true);
+                a.classList.add('active');
+            } else if(res === 'heal') {
+                a.innerText = "REVERSE CURSED TECHNIQUE"; a.style.color = "#00ff88";
+                this.hp = GAME_CONFIG.PLAYER_START_HP;
+                a.classList.add('active');
+            } else {
+                a.innerText = "CURSED WAVE"; a.style.color = "#ff6666";
+                for(let i=0; i<6; i++) this.createEntity(false);
+                a.classList.add('active');
+            }
+
+            setTimeout(() => a.classList.remove('active'), 2000);
+        },
+
+        endJackpot() {
+            this.jackpot = false;
+            document.getElementById('jackpot-timer').style.display = 'none';
+        },
+
+        draw() {
+            ctx.save();
+            if(this.shake > 1) ctx.translate((Math.random()-0.5)*this.shake, (Math.random()-0.5)*this.shake);
+
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(0, 255, 136, 0.05)';
+            ctx.lineWidth = 1;
+            for(let x=0; x<canvas.width; x+=100) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+
+            this.bolts.forEach(b => {
+                if(b.life > 10) {
+                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+                    ctx.beginPath(); ctx.arc(b.x, b.y, 75, 0, Math.PI*2); ctx.stroke();
+                } else {
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth = 6;
+                    ctx.beginPath(); ctx.moveTo(b.x, 0); ctx.lineTo(b.x-20, canvas.height/2); ctx.lineTo(b.x+20, canvas.height); ctx.stroke();
+                }
+            });
+
+            this.entities.forEach(e => {
+                if(e.isBoss) {
+                    ctx.save();
+                    ctx.shadowBlur = 50; ctx.shadowColor = 'cyan';
+                    if(bossImg.complete) {
+                        ctx.drawImage(bossImg, e.x - e.size, e.y - e.size, e.size*2, e.size*2);
+                    }
+                    ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(e.x - 50, e.y - 120, 100, 8);
+                    ctx.fillStyle = '#00ffff'; ctx.fillRect(e.x - 50, e.y - 120, (e.hp/e.maxHp)*100, 8);
+                    ctx.restore();
+                } else {
+                    const pulse = Math.sin(e.pulse) * 0.4;
+                    ctx.save();
+                    ctx.translate(e.x, e.y);
+                    ctx.rotate(pulse);
+                    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 40);
+                    grad.addColorStop(0, 'rgba(40, 0, 60, 0.95)');
+                    grad.addColorStop(0.4, 'rgba(20, 0, 30, 0.7)');
+                    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 32, 20, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.fillStyle = '#0d0015';
+                    ctx.shadowColor = '#4a0022';
+                    ctx.shadowBlur = 18;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 24, 16, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = 'rgba(180, 0, 40, 0.9)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(-18, 0); ctx.lineTo(18, 0);
+                    ctx.moveTo(-8, -8); ctx.lineTo(8, 8);
+                    ctx.moveTo(-8, 8); ctx.lineTo(8, -8);
+                    ctx.stroke();
+                    ctx.fillStyle = '#2d0018';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, 14, 10, 0, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(100, 0, 80, 0.8)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.ellipse(-14, -8, 10, 6, -0.6, 0, Math.PI*2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(14, -8, 10, 6, 0.6, 0, Math.PI*2);
+                    ctx.stroke();
+                    ctx.fillStyle = '#ff0044';
+                    ctx.shadowColor = '#ff0044';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(-7, -4, 4, 0, Math.PI*2);
+                    ctx.arc(7, -4, 4, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = '#0d0015';
+                    ctx.beginPath();
+                    ctx.arc(-7, -4, 2, 0, Math.PI*2);
+                    ctx.arc(7, -4, 2, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            if(playerImg.complete) {
+                ctx.save();
+                const pSize = this.jackpot ? 70 : 50;
+                if(this.invincible > 0 && Math.floor(this.invincible * 20) % 2 === 0) ctx.globalAlpha = 0.5;
+                if(this.jackpot) {
+                    ctx.shadowBlur = 60; ctx.shadowColor = 'gold';
+                    ctx.globalAlpha = (ctx.globalAlpha || 1) * (0.8 + Math.sin(this.player.rot*5)*0.2);
+                }
+                ctx.drawImage(playerImg, this.player.x - pSize, this.player.y - pSize, pSize*2, pSize*2);
+                
+                if(!this.jackpot) {
+                    ctx.fillStyle = 'rgba(255,0,0,0.3)'; ctx.fillRect(this.player.x - 30, this.player.y - 80, 60, 5);
+                    ctx.fillStyle = '#00ff88'; ctx.fillRect(this.player.x - 30, this.player.y - 80, (this.hp/GAME_CONFIG.PLAYER_START_HP)*60, 5);
+                }
+                ctx.restore();
+            }
+
+            if(this.showHitbox) {
+                ctx.strokeStyle = 'rgba(0, 255, 136, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(this.player.x, this.player.y - GAME_CONFIG.PLAYER_HITBOX_OFFSET_Y, this.player.s, 0, Math.PI*2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                this.entities.forEach(e => {
+                    ctx.strokeStyle = e.isBoss ? 'rgba(0, 255, 255, 0.6)' : 'rgba(255, 0, 100, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(e.x, e.y, e.size, 0, Math.PI*2);
+                    ctx.stroke();
+                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.4)';
+                    ctx.beginPath();
+                    const attackRad = e.isBoss ? GAME_CONFIG.ATTACK_RANGE + GAME_CONFIG.BOSS_ATTACK_HITBOX_EXTRA : GAME_CONFIG.ATTACK_RANGE;
+                    ctx.arc(e.x, e.y, attackRad, 0, Math.PI*2);
+                    ctx.stroke();
+                });
+            }
+
+            this.vfx.forEach(p => {
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, 4, 4);
+            });
+            this.txt.forEach(t => {
+                ctx.globalAlpha = t.life; ctx.fillStyle = t.c;
+                ctx.font = '900 28px Orbitron'; ctx.textAlign = 'center';
+                ctx.fillText(t.m, t.x, t.y);
+            });
+
+            // Combo display
+            if(this.combo >= 2 && this.comboTime > 0) {
+                ctx.save();
+                ctx.globalAlpha = Math.min(1, this.comboTime * 2);
+                ctx.fillStyle = '#ffd700';
+                ctx.font = '900 24px Orbitron';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.combo + ' HIT COMBO', canvas.width/2, 140);
+                ctx.restore();
+            }
+
+            ctx.restore();
+        },
+
+        endGame() {
+            this.alive = false;
+            AudioSystem.bgm.pause();
+            const m = Math.floor(this.survivalTime / 60);
+            const s = Math.floor(this.survivalTime % 60);
+            document.getElementById('survival-time-display').innerText = 'You survived ' + m + ':' + (s < 10 ? '0' : '') + s;
+            document.getElementById('death-screen').classList.remove('hidden');
+        }
+    };
+
+    window.addEventListener('mousemove', e => { Engine.mouse.x = e.clientX; Engine.mouse.y = e.clientY; });
+    window.addEventListener('mousedown', () => Engine.attack());
+    window.addEventListener('keydown', e => { 
+        if(e.code === 'Space') Engine.spin();
+        if(e.code === 'KeyH') { Engine.showHitbox = !Engine.showHitbox; }
+    });
+
+</script>
+</body>
+</html>

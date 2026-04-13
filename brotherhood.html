@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BROTHERHOOD: BOOGIE WOOGIE</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --todo-skin: #ffdcb0;
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Courier New', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: crosshair;
+        }
+
+        /* --- CRT EFFECT LAYER --- */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none; z-index: 999;
+        }
+
+        /* --- UI LAYOUT --- */
+        #ui-layer {
+            position: absolute; top: 20px; width: 800px;
+            display: flex; justify-content: space-between;
+            text-transform: uppercase; font-weight: bold;
+            z-index: 10; text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* --- NAVIGATION BUTTONS (New) --- */
+        #nav-layer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 8px 15px;
+            font-family: 'Courier New', sans-serif;
+            font-weight: bold;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            text-align: center;
+            cursor: pointer;
+            backdrop-filter: blur(2px);
+        }
+
+        .nav-btn:hover {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .stat-box span { font-size: 1.5rem; display: block; }
+        .stat-box small { color: #888; letter-spacing: 2px; font-size: 0.8rem; }
+
+        /* --- ENERGY BAR --- */
+        #energy-wrapper {
+            position: absolute; bottom: 30px; width: 600px; height: 20px;
+            border: 2px solid #333; transform: skewX(-20deg);
+            background: #000; z-index: 10;
+        }
+        #energy-fill {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            box-shadow: 0 0 20px var(--neon-blue);
+            transition: width 0.1s linear;
+        }
+        .critical-energy { animation: flash-red 0.2s infinite; background: var(--neon-red) !important; }
+
+        /* --- GAME CONTAINER --- */
+        #game-stage {
+            width: 900px; height: 600px;
+            border: 1px solid #333;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.1);
+            overflow: hidden;
+        }
+
+        /* --- THE BROTHERS (Watchers) --- */
+        .watcher {
+            position: absolute; bottom: 0; height: 250px;
+            transition: transform 0.2s;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+            pointer-events: none; z-index: 5;
+        }
+        #w-yuji { left: -50px; transform: rotate(5deg); }
+        #w-todo { right: -50px; transform: rotate(-5deg); }
+
+        .watcher.vibing { animation: bounce 0.4s infinite alternate; }
+        @keyframes bounce { 100% { transform: translateY(-10px) rotate(0deg); } }
+
+        /* --- CHOSO SPIN ENGINE --- */
+        #choso-spin {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 100px; 
+            z-index: 10000;
+            cursor: pointer;
+            animation: choso-spin 3s linear infinite;
+            transition: width 0.3s ease;
+        }
+        #choso-spin:hover { animation-play-state: paused; width: 110px; }
+        #choso-spin:active { animation: choso-spin 0.1s linear infinite; } /* SUPERNOVA SPEED */
+
+        @keyframes choso-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* --- TARGET (JOGO) --- */
+        #target {
+            width: 80px; height: 80px;
+            position: absolute;
+            background-image: url('assets/images/mahito.png'); 
+            background-size: cover; border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 0 15px var(--neon-red);
+            z-index: 20; display: none;
+            cursor: url('assets/images/hand2.png'), pointer;
+        }
+        
+        #target:empty { background-color: #555; display: flex; align-items: center; justify-content: center; content: "TARGET"; color:red; font-size:10px; }
+
+        /* --- OVERLAYS --- */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 100; backdrop-filter: blur(5px);
+        }
+        .hidden { display: none !important; }
+
+        h1 { font-size: 4rem; margin: 0; color: var(--neon-blue); text-shadow: 4px 4px 0px var(--neon-purple); font-style: italic; }
+        h2 { font-size: 2rem; color: var(--neon-red); margin-top: 10px; text-transform: uppercase; }
+        
+        button {
+            background: transparent; border: 2px solid var(--neon-blue);
+            color: var(--neon-blue); padding: 15px 40px;
+            font-size: 1.2rem; font-family: inherit; font-weight: bold;
+            margin-top: 30px; cursor: pointer; transition: 0.2s;
+            text-transform: uppercase; letter-spacing: 3px;
+        }
+        button:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 30px var(--neon-blue); }
+
+        /* --- EFFECTS --- */
+        .spark {
+            position: absolute; pointer-events: none;
+            background: white; width: 4px; height: 4px;
+            z-index: 50; border-radius: 50%;
+        }
+
+        .black-flash-mode { animation: invert-world 0.1s infinite; }
+        @keyframes invert-world {
+            0% { filter: invert(0); }
+            50% { filter: invert(1) hue-rotate(180deg); }
+            100% { filter: invert(0); }
+        }
+        @keyframes flash-red { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        /* Floating Text */
+        .float-text {
+            position: absolute; font-weight: 900; font-size: 2rem;
+            pointer-events: none; z-index: 60;
+            animation: float-up 0.8s forwards;
+            -webkit-text-stroke: 1px black;
+        }
+        @keyframes float-up { to { transform: translateY(-50px) scale(1.2); opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <div id="nav-layer">
+        <a href="index.html?nointro=1" class="nav-btn">HOME</a>
+        <a href="dih.html" class="nav-btn">DIH</a>
+    </div>
+
+    <div id="ui-layer">
+        <div class="stat-box">
+            <small>SYNCHRONIZATION</small>
+            <span id="score-el">0%</span>
+        </div>
+        <div class="stat-box" style="text-align: right;">
+            <small>BEST RECORD</small>
+            <span id="best-el">0%</span>
+        </div>
+    </div>
+
+    <div id="game-stage">
+        
+        <img src="assets/images/yuji.png" id="w-yuji" class="watcher" alt="Yuji">
+        <img src="assets/images/Sigma.png" id="w-todo" class="watcher" alt="Todo">
+
+        <div id="target"></div>
+
+        <div id="start-screen" class="overlay">
+            <h1>BOOGIE WOOGIE</h1>
+            <p style="color:#aaa; letter-spacing: 1px;">CLICK THE TARGET. DON'T LOSE RHYTHM.</p>
+            <button onclick="Game.start()">CLAP TO START</button>
+        </div>
+
+        <div id="game-over-screen" class="overlay hidden">
+            <h1 style="color:var(--neon-red)">BROKEN LINK</h1>
+            <h2 id="final-rank">GRADE 4 SORCERER</h2>
+            <div style="margin-top: 20px; font-size: 1.5rem;">FINAL COMBO: <span id="final-score" style="color:white">0</span></div>
+            <button onclick="Game.start()">TRY AGAIN</button>
+        </div>
+
+    </div>
+
+    <img src="assets/images/choso.png" id="choso-spin" alt="CHOSO">
+
+    <div id="energy-wrapper">
+        <div id="energy-fill"></div>
+    </div>
+
+    <script>
+        const AudioFX = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            playTone(freq, type, duration) {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            },
+            hit() { this.playTone(200, 'sawtooth', 0.1); },
+            teleport() { this.playTone(600, 'sine', 0.2); },
+            blackFlash() { this.playTone(50, 'square', 0.5); this.playTone(100, 'sawtooth', 0.4); }
+        };
+
+        const Game = {
+            state: { active: false, score: 0, energy: 100, best: localStorage.getItem('jjk_best') || 0 },
+            
+            dom: {
+                stage: document.getElementById('game-stage'),
+                target: document.getElementById('target'),
+                energyBar: document.getElementById('energy-fill'),
+                score: document.getElementById('score-el'),
+                best: document.getElementById('best-el'),
+                startScreen: document.getElementById('start-screen'),
+                endScreen: document.getElementById('game-over-screen'),
+                rank: document.getElementById('final-rank'),
+                finalScore: document.getElementById('final-score'),
+                yuji: document.getElementById('w-yuji'),
+                todo: document.getElementById('w-todo')
+            },
+
+            loopId: null,
+
+            init() {
+                this.dom.best.innerText = this.state.best;
+                this.dom.target.addEventListener('mousedown', (e) => this.handleHit(e));
+                this.dom.target.addEventListener('dragstart', (e) => e.preventDefault());
+            },
+
+            start() {
+                this.state.active = true;
+                this.state.score = 0;
+                this.state.energy = 100;
+                
+                this.dom.startScreen.classList.add('hidden');
+                this.dom.endScreen.classList.add('hidden');
+                this.dom.target.style.display = 'block';
+                this.dom.energyBar.classList.remove('critical-energy');
+                
+                this.spawnTarget();
+                this.gameLoop();
+                AudioFX.teleport();
+            },
+
+            stop() {
+                this.state.active = false;
+                cancelAnimationFrame(this.loopId);
+                
+                if(this.state.score > this.state.best) {
+                    this.state.best = this.state.score;
+                    localStorage.setItem('jjk_best', this.state.best);
+                }
+                this.dom.best.innerText = this.state.best;
+
+                let rank = "GRADE 4";
+                let color = "#888";
+                if(this.state.score > 20) { rank = "GRADE 2"; color = "cyan"; }
+                if(this.state.score > 50) { rank = "GRADE 1"; color = "lime"; }
+                if(this.state.score > 80) { rank = "SPECIAL GRADE"; color = "red"; }
+
+                this.dom.finalScore.innerText = this.state.score;
+                this.dom.rank.innerText = rank;
+                this.dom.rank.style.color = color;
+                
+                this.dom.target.style.display = 'none';
+                this.dom.endScreen.classList.remove('hidden');
+                this.dom.yuji.classList.remove('vibing');
+                this.dom.todo.classList.remove('vibing');
+            },
+
+            gameLoop() {
+                if(!this.state.active) return;
+
+                // --- BALANCING UPDATE ---
+                // Base drain is now much lower (0.12 instead of 0.3)
+                // It scales gently with score
+                const drainRate = 0.12 + (this.state.score * 0.008); 
+                
+                this.state.energy -= drainRate;
+
+                if(this.state.energy <= 0) {
+                    this.state.energy = 0;
+                    this.stop();
+                }
+
+                this.dom.energyBar.style.width = this.state.energy + "%";
+                if(this.state.energy < 20) this.dom.energyBar.classList.add('critical-energy');
+                else this.dom.energyBar.classList.remove('critical-energy');
+
+                this.loopId = requestAnimationFrame(() => this.gameLoop());
+            },
+
+            handleHit(e) {
+                e.stopPropagation(); 
+                if(!this.state.active) return;
+
+                this.state.score++;
+                this.dom.score.innerText = this.state.score;
+                
+                // --- BALANCING UPDATE ---
+                // Increased energy gain per hit to 25 (was 15)
+                this.state.energy = Math.min(100, this.state.energy + 25);
+
+                this.createParticles(e.clientX, e.clientY);
+                this.spawnTarget();
+                
+                if(this.state.score % 10 === 0) {
+                    this.triggerBlackFlash();
+                } else {
+                    AudioFX.hit();
+                    this.shakeScreen(5);
+                }
+
+                this.dom.yuji.classList.add('vibing');
+                this.dom.todo.classList.add('vibing');
+                clearTimeout(this.vibingTimer);
+                this.vibingTimer = setTimeout(() => {
+                    this.dom.yuji.classList.remove('vibing');
+                    this.dom.todo.classList.remove('vibing');
+                }, 500);
+            },
+
+            spawnTarget() {
+                const stage = this.dom.stage;
+                const size = Math.max(45, 90 - (this.state.score * 1.5)); 
+                const maxLeft = stage.clientWidth - size;
+                const maxTop = stage.clientHeight - size;
+                const newX = Math.floor(Math.random() * maxLeft);
+                const newY = Math.floor(Math.random() * maxTop);
+                this.dom.target.style.width = size + "px";
+                this.dom.target.style.height = size + "px";
+                this.dom.target.style.left = newX + "px";
+                this.dom.target.style.top = newY + "px";
+            },
+
+            triggerBlackFlash() {
+                AudioFX.blackFlash();
+                this.state.energy = 100;
+                document.body.classList.add('black-flash-mode');
+                this.shakeScreen(20);
+                this.showFloatingText("BLACK FLASH!", "#000");
+                setTimeout(() => { document.body.classList.remove('black-flash-mode'); }, 150);
+            },
+
+            shakeScreen(intensity) {
+                const stage = this.dom.stage;
+                stage.style.transform = `translate(${Math.random()*intensity - intensity/2}px, ${Math.random()*intensity - intensity/2}px)`;
+                setTimeout(() => stage.style.transform = "translate(0,0)", 50);
+            },
+
+            showFloatingText(text, color) {
+                const el = document.createElement('div');
+                el.classList.add('float-text');
+                el.innerText = text;
+                el.style.color = color;
+                el.style.left = (this.dom.stage.clientWidth / 2 - 100) + "px";
+                el.style.top = (this.dom.stage.clientHeight / 2) + "px";
+                el.style.textShadow = "0 0 10px #ff0000";
+                this.dom.stage.appendChild(el);
+                setTimeout(() => el.remove(), 800);
+            },
+
+            createParticles(x, y) {
+                for(let i=0; i<8; i++) {
+                    const p = document.createElement('div');
+                    p.classList.add('spark');
+                    p.style.left = x + "px";
+                    p.style.top = y + "px";
+                    p.style.background = (this.state.score % 10 === 0) ? "black" : (Math.random() > 0.5 ? "var(--neon-blue)" : "var(--neon-purple)");
+                    document.body.appendChild(p);
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = Math.random() * 50 + 20;
+                    const tx = Math.cos(angle) * velocity;
+                    const ty = Math.sin(angle) * velocity;
+                    p.animate([
+                        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                        { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                    ], { duration: 300, easing: 'ease-out' }).onfinish = () => p.remove();
+                }
+            }
+        };
+
+        Game.init();
+    </script>
+</body>
+</html>

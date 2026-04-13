@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en" data-domain-sync>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nah I'd Win - Infinite Void Portfolio</title>
+   
+    <style>
+        @font-face {
+            font-family: 'CCroman';
+            src: url('assets/fonts/CCroman.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --color-background: #121212;
+            --color-text: #E0E0E0;
+            --color-neon-red: #FF3366;
+            --color-neon-blue: #33CCFF;
+            --color-neon-purple: #C850C0;
+            --color-divider: rgba(255, 255, 255, 0.1);
+            --header-height: 110px;
+            --font-primary: 'Arial', sans-serif;
+            --font-headers: 'CCroman', serif;
+            --neon-cycle-duration: 4s;
+        }
+
+        .sukuna-mode {
+            --color-background: #1a0505;
+            --color-text: #ffe6e6;
+            --color-neon-red: #ff0000;
+            --color-neon-blue: #8a0000;
+            --color-neon-purple: #cc0000;
+            --color-divider: rgba(255, 0, 0, 0.4);
+        }
+
+        body {
+            cursor: url('assets/images/hand2.png') 16 16, auto;
+            background-color: var(--color-background);
+            background-image: url('assets/images/voidd.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--color-text);
+            font-family: var(--font-primary);
+            margin: 0;
+            line-height: 1.6;
+            transition: background 0.8s ease, color 0.5s ease;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .sukuna-mode body {
+            background-image: linear-gradient(rgba(80,0,0,0.8), rgba(20,0,0,0.9)), url('assets/images/yes.png') !important;
+            cursor: url('assets/images/finger2.png') 0 0, auto;
+        }
+
+        a, button, .nav-button, input, textarea { cursor: url('assets/images/void2.png') 0 0, pointer; }
+        .sukuna-mode a, .sukuna-mode button, .sukuna-mode .nav-button, .sukuna-mode input, .sukuna-mode textarea { cursor: url('assets/images/Sclick2.png') 0 0, pointer; }
+
+        html { scroll-behavior: smooth; scroll-padding-top: var(--header-height); }
+        .container { width: 90%; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+
+        /* ENTER SCREEN */
+        #enter-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1a051a 0%, #000000 100%);
+            z-index: 99999; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; transition: opacity 1.2s ease-out;
+        }
+        #enter-btn {
+            position: relative; background: transparent; color: #fff;
+            font-family: var(--font-headers, sans-serif); font-size: 2.5rem;
+            padding: 20px 60px; border: 2px solid rgba(255,255,255,0.1);
+            text-transform: uppercase; letter-spacing: 8px; cursor: pointer;
+            transition: 0.4s; text-shadow: 0 0 10px rgba(188,19,254,0.7);
+            box-shadow: 0 0 20px rgba(188,19,254,0.2), inset 0 0 20px rgba(188,19,254,0.2);
+        }
+        #enter-btn:hover {
+            background: rgba(188,19,254,0.1); border-color: #bc13fe;
+            box-shadow: 0 0 30px #bc13fe, inset 0 0 20px #bc13fe;
+            text-shadow: 0 0 20px #bc13fe; transform: scale(1.05);
+        }
+
+        /* FLOATING FLASH BUTTON */
+        #fixed-flash-btn {
+            position: fixed; bottom: 30px; right: 30px; width: 80px; height: 80px;
+            border-radius: 50%; background: #000; border: 2px solid #ff0000;
+            color: #ff0000; font-family: var(--font-headers); font-size: 2rem;
+            z-index: 10001; cursor: pointer; display: flex; justify-content: center;
+            align-items: center; box-shadow: 0 0 15px #ff0000; transition: transform 0.1s;
+            animation: unstable-flash 2s infinite;
+        }
+        #fixed-flash-btn:hover { background: #1a0000; box-shadow: 0 0 40px #ff0000, inset 0 0 20px #ff0000; transform: scale(1.1) rotate(5deg); }
+        #fixed-flash-btn:active { transform: scale(0.9); }
+        #fixed-flash-btn span { pointer-events: none; }
+        @keyframes unstable-flash {
+            0%   { box-shadow: 0 0 15px #ff0000; border-color: #ff0000; }
+            50%  { box-shadow: 0 0 5px #550000;  border-color: #aa0000; }
+            52%  { box-shadow: 0 0 25px #ff0000; border-color: #fff; transform: translateX(2px); }
+            54%  { transform: translateX(-2px); }
+            100% { box-shadow: 0 0 15px #ff0000; border-color: #ff0000; }
+        }
+
+        /* TYPOGRAPHY */
+        h1, h2, h3, h4 { color: var(--color-text); font-family: var(--font-headers); font-weight: 700; margin-top: 0; }
+        h1 { font-size: 2.5em; text-transform: uppercase; animation: text-cycle var(--neon-cycle-duration) infinite alternate; }
+        h2 { font-size: 2em; }
+        @keyframes text-cycle {
+            0%   { text-shadow: 0 0 8px var(--color-neon-red),    0 0 15px var(--color-neon-red); }
+            50%  { text-shadow: 0 0 8px var(--color-neon-purple), 0 0 15px var(--color-neon-purple); }
+            100% { text-shadow: 0 0 8px var(--color-neon-blue),   0 0 15px var(--color-neon-blue); }
+        }
+
+        /* HEADER & NAV */
+        header {
+            background: rgba(5,5,12,0.92);
+            height: var(--header-height);
+            position: sticky; top: 0; z-index: 10000;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(14px);
+            box-shadow: inset 0 -1px 0 rgba(255,255,255,0.05);
+            padding: 0 12px;
+        }
+        #cursed-energy-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; opacity: 0.9;
+        }
+        header .container { display: flex; justify-content: space-between; align-items: center; height: 100%; gap: 20px; }
+        header h1 { flex: 0 0 auto; margin: 0; font-size: 1.3rem; letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; }
+        .nav-links { display: flex; flex: 1 1 auto; align-items: center; gap: 4px; flex-wrap: nowrap; justify-content: flex-end; height: 100%; }
+        .nav-links a, .nav-links .nav-button {
+            display: inline-flex; align-items: center; justify-content: center;
+            height: 100%; padding: 0 20px; line-height: 1.1; margin: 0; white-space: nowrap;
+        }
+        .nav-links a {
+            color: #fff; font-weight: bold; font-size: 1.05rem; letter-spacing: 0.05em;
+            text-transform: uppercase; text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            text-decoration: none; transition: 0.3s;
+        }
+        .nav-links a:hover { color: var(--color-neon-blue); text-shadow: 0 0 15px var(--color-neon-blue); background: rgba(0,0,0,0.3); border-radius: 4px; }
+        .sukuna-mode .nav-links a:hover { color: var(--color-neon-red); text-shadow: 0 0 15px var(--color-neon-red); }
+        .nav-button {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--color-neon-blue);
+            color: var(--color-neon-blue); padding: 0 24px; margin-left: 4px;
+            font-size: 1rem; font-weight: bold; cursor: pointer; border-radius: 4px;
+            text-transform: uppercase; box-shadow: 0 0 10px rgba(51,204,255,0.3); transition: all 0.3s;
+        }
+        .nav-button:hover { background: var(--color-neon-blue); color: #000; box-shadow: 0 0 25px var(--color-neon-blue); }
+        .sukuna-mode .nav-button { border-color: var(--color-neon-red); color: var(--color-neon-red); box-shadow: 0 0 10px rgba(255,0,0,0.3); }
+        .active-music { background-color: var(--color-neon-blue) !important; color: #000 !important; }
+
+        /* PAGE CONTENT */
+        .content-section { padding: 60px 0; }
+        .neon-divider { border: none; height: 1px; background-color: var(--color-divider); width: 80%; margin: 40px auto; }
+        .logo-section { text-align: center; margin: 40px 0; }
+        .logo-section img {
+            border-radius: 50%; border: 3px solid var(--color-neon-blue);
+            box-shadow: 0 0 30px var(--color-neon-blue); width: 180px; height: 180px; object-fit: cover;
+            animation: pulse-logo 3s infinite alternate;
+        }
+        @keyframes pulse-logo { 0% { transform: scale(1); } 100% { transform: scale(1.05); box-shadow: 0 0 50px var(--color-neon-purple); } }
+        .opening-section {
+            display: flex; align-items: center; gap: 40px; padding: 40px;
+            background: rgba(25,25,25,0.8); border-radius: 10px;
+            border: 1px solid var(--color-neon-purple); box-shadow: 0 0 30px rgba(200,80,192,0.3);
+        }
+        .opening-content { flex: 1; }
+        .opening-image { flex: 0 0 40%; text-align: center; }
+        .opening-image img { max-width: 100%; border-radius: 5px; border: 2px solid var(--color-neon-blue); }
+        .opening-content a {
+            display: inline-block; background-color: var(--color-neon-red); color: #fff;
+            padding: 10px 20px; margin-top: 20px; border-radius: 5px; text-decoration: none;
+            font-weight: bold; text-transform: uppercase; box-shadow: 0 0 20px var(--color-neon-red);
+        }
+        .portfolio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 30px; }
+        .portfolio-item {
+            background: rgba(25,25,25,0.6); padding: 10px; border-radius: 8px;
+            border: 1px solid var(--color-divider); transition: transform 0.3s;
+        }
+        .portfolio-item:hover { transform: translateY(-5px); box-shadow: 0 0 25px var(--color-neon-red); }
+        .portfolio-item img { width: 100%; height: 250px; object-fit: cover; border-radius: 5px; border: 1px solid var(--color-neon-blue); }
+        .portfolio-item h4 { text-align: center; margin: 10px 0 5px; font-size: 1.1em; }
+        footer {
+            background-color: rgba(0,0,0,0.7); padding: 20px 0;
+            border-top: 2px solid var(--color-neon-blue);
+            box-shadow: 0 0 20px var(--color-neon-blue); margin-top: 50px;
+        }
+        footer .container { display: flex; justify-content: space-between; align-items: center; }
+        footer p { margin: 0; font-size: 0.85em; color: #777; }
+        .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* SCROLL PROGRESS BAR — z-index above everything */
+        #cursed-energy-progress {
+            position: fixed; top: 0; left: 0; height: 4px; width: 0%;
+            background: linear-gradient(90deg, var(--color-neon-blue), var(--color-neon-purple));
+            z-index: 10003;
+            box-shadow: 0 0 8px var(--color-neon-blue), 0 0 2px #fff;
+            transition: width 0.1s;
+            border-radius: 0 2px 2px 0;
+        }
+        .sukuna-mode #cursed-energy-progress { background: linear-gradient(90deg, var(--color-neon-red), #800); }
+
+        /* SCREEN SHAKE */
+        @keyframes violent-shake {
+            0%   { transform: translate(1px, 1px)   rotate(0deg); }
+            10%  { transform: translate(-3px, -4px) rotate(-1deg); }
+            20%  { transform: translate(-5px, 0px)  rotate(1deg); }
+            30%  { transform: translate(5px, 4px)   rotate(0deg); }
+            40%  { transform: translate(1px, -1px)  rotate(1deg); }
+            50%  { transform: translate(-1px, 4px)  rotate(-1deg); }
+            60%  { transform: translate(-5px, 1px)  rotate(0deg); }
+            70%  { transform: translate(5px, 1px)   rotate(-1deg); }
+            80%  { transform: translate(-1px, -1px) rotate(1deg); }
+            90%  { transform: translate(1px, 4px)   rotate(0deg); }
+            100% { transform: translate(1px, -2px)  rotate(-1deg); }
+        }
+        .screen-shaking { animation: violent-shake 0.25s infinite; }
+
+        @media (max-width: 1024px) {
+            header { height: auto; padding: 12px; }
+            header .container { flex-direction: column; gap: 12px; }
+            .nav-links { flex-wrap: wrap; height: auto; justify-content: center; }
+            .nav-links a, .nav-links .nav-button { height: 44px; }
+            .opening-section { flex-direction: column; }
+            footer .container { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body class="theme-gojo">
+
+    <button id="fixed-flash-btn" title="TRIGGER BLACK FLASH (Press B)">
+        <span>⚡</span>
+    </button>
+
+    <div id="cursed-energy-progress"></div>
+
+    <audio id="bg-music" loop><source src="assets/audio/Aizo.mp3" type="audio/mpeg"></audio>
+    <audio id="sound-click-effect" src="assets/audio/E.mp3" preload="auto"></audio>
+    <audio id="sound-gojo"   src="assets/audio/gojo_domain.mp3"   preload="auto"></audio>
+    <audio id="sound-sukuna" src="assets/audio/sukuna_domain.mp3" preload="auto"></audio>
+
+    <div id="enter-screen">
+        <button id="enter-btn">ENTER ARCHIVES</button>
+    </div>
+
+    <header>
+        <canvas id="cursed-energy-canvas"></canvas>
+        <div class="container">
+            <h1>Nah I'd Win</h1>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="interactive.html">Interactive</a>
+                <a href="about.html">About Me</a>
+                <a href="gallery.html">Gallery</a>
+                <a href="style.html">Domain Switcher</a>
+                <a href="playground.html">Playground</a>
+                <a href="contact.html">Contact</a>
+                <button id="audio-toggle" class="nav-button">🔇 OFF</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="logo-section content-section reveal">
+                <img src="assets/images/nahwewin.jpg" alt="Logo">
+            </section>
+            <section id="home" class="opening-section content-section reveal">
+                <div class="opening-content">
+                    <h2>Infinite Void</h2>
+                    <p>The strongest sorcerer. Mastering cursed techniques in code. Nah, I'd win.</p>
+                    <a href="#portfolio">Enter Domain</a>
+                </div>
+                <div class="opening-image">
+                    <img src="assets/images/gojo.jpg" alt="Satoru Gojo">
+                </div>
+            </section>
+            <section id="gallery" class="content-section">
+                <h2 class="reveal">Lobotomy Kaisen Gallery</h2>
+                <hr class="neon-divider">
+                <div class="portfolio-grid">
+                    <div class="portfolio-item reveal"><img src="assets/images/nahwewin.jpg" alt="Nah I'd Win"><h4>NAH, I'D WIN</h4></div>
+                    <div class="portfolio-item reveal"><img src="assets/images/noo.jpeg" alt="Mahoraga Help"><h4>MAHORAGA HELP!!!</h4></div>
+                    <div class="portfolio-item reveal"><img src="assets/images/standproud.png" alt="Stand Proud"><h4>STAND PROUD</h4></div>
+                    <div class="portfolio-item reveal"><img src="assets/images/dontgetit.jpg" alt="I Don't Get It"><h4>I DON'T GET IT</h4></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="reveal" style="text-align: center; margin-top: 50px; padding-bottom: 20px;">
+        <img src="assets/images/zl.png" alt="Zoro looking confused" style="max-width: 200px; height: auto;">
+        <p style="opacity: 0.5; font-size: 0.8rem;">(Press 'H' for Purple, 'B' for Flash)</p>
+        <p style="margin-top: 24px;">
+            <a href="movies.html" class="nav-button" style="display: inline-block; text-decoration: none;">Watch Epic Fight Scenes</a>
+        </p>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Satoru Gojo. Nah, I'd win.</p>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const isMobile = window.innerWidth < 768;
+
+        // =============================================
+        // 1. HEADER CANVAS PARTICLES
+        // =============================================
+        const canvas = document.getElementById('cursed-energy-canvas');
+        const ctx    = canvas.getContext('2d');
+        let particles = [];
+        const config = {
+            colors: ['#33CCFF','#C850C0','#ffffff'],
+            speedY: -1.5, count: isMobile ? 40 : 150,
+            glow: '#33CCFF', globalComposite: 'lighter'
+        };
+
+        function resizeCanvas() {
+            canvas.width  = canvas.parentElement.offsetWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x      = Math.random() * canvas.width;
+                this.y      = canvas.height + Math.random() * 20;
+                this.size   = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 1.5;
+                this.speedY = config.speedY * (Math.random() * 0.5 + 0.8);
+                this.life   = Math.random() * 0.5 + 0.5;
+                this.color  = config.colors[Math.floor(Math.random() * config.colors.length)];
+                this.decay  = Math.random() * 0.01 + 0.005;
+            }
+            update() {
+                this.x    += this.speedX + Math.sin(this.y * 0.05) * 0.5;
+                this.y    += this.speedY;
+                this.life -= this.decay;
+                this.size -= 0.02;
+                if (this.life <= 0 || this.size <= 0) this.reset();
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle   = this.color;
+                ctx.globalAlpha = this.life;
+                if (!isMobile) { ctx.shadowBlur = 15; ctx.shadowColor = config.glow; }
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur  = 0;
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < config.count; i++) particles.push(new Particle());
+        }
+        initParticles();
+
+        function animateParticles() {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = config.globalComposite;
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // =============================================
+        // 2. AUDIO
+        // =============================================
+        const audio         = document.getElementById('bg-music');
+        const toggleButton  = document.getElementById('audio-toggle');
+        const btnFlashFixed = document.getElementById('fixed-flash-btn');
+        const clickSound    = document.getElementById('sound-click-effect');
+
+        if (toggleButton && audio) {
+            toggleButton.addEventListener('click', () => {
+                if (audio.paused) {
+                    audio.volume = 0.5;
+                    audio.play().then(() => {
+                        toggleButton.textContent = '🔊 ON';
+                        toggleButton.classList.add('active-music');
+                    });
+                } else {
+                    audio.pause();
+                    toggleButton.textContent = '🔇 OFF';
+                    toggleButton.classList.remove('active-music');
+                }
+            });
+        }
+
+        // =============================================
+        // 3. ENTER SCREEN
+        // =============================================
+        const enterScreen     = document.getElementById('enter-screen');
+        const enterBtn        = document.getElementById('enter-btn');
+        const skipByReferrer  = document.referrer && !document.referrer.includes('index.html');
+        const skipBySession   = sessionStorage.getItem('entered-archives') === 'true';
+        const hasPreviousPage = window.history.length > 1;
+
+        if ((skipByReferrer || skipBySession || hasPreviousPage) && enterScreen) {
+            enterScreen.style.opacity = '0';
+            enterScreen.style.display = 'none';
+        }
+
+        enterBtn.addEventListener('click', () => {
+            sessionStorage.setItem('entered-archives', 'true');
+            enterScreen.style.opacity = '0';
+            setTimeout(() => { enterScreen.style.display = 'none'; }, 1000);
+            if (clickSound) clickSound.play().catch(() => {});
+            if (audio) {
+                audio.currentTime = 6 * 60 + 59;
+                audio.volume = 0.5;
+                audio.play().catch(() => {});
+                toggleButton.textContent = '🔊 ON';
+                toggleButton.classList.add('active-music');
+            }
+        });
+
+        // =============================================
+        // 4. SCROLL ANIMATIONS + PROGRESS BAR
+        // =============================================
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        const progressBar = document.getElementById('cursed-energy-progress');
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height    = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            if (height > 0) progressBar.style.width = (winScroll / height * 100) + '%';
+        });
+
+        // =============================================
+        // 5. BLACK FLASH
+        //    Anime-accurate: dark void drops over screen,
+        //    purple/black cursed energy crackles outward,
+        //    white impact core, expanding void ring, fade out.
+        //    No full-screen colour inversion.
+        // =============================================
+        function triggerBlackFlash() {
+            if (clickSound) { clickSound.currentTime = 0; clickSound.play().catch(() => {}); }
+
+            const fc = document.createElement('canvas');
+            fc.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:100001;pointer-events:none;';
+            fc.width  = window.innerWidth;
+            fc.height = window.innerHeight;
+            document.body.appendChild(fc);
+            const fctx     = fc.getContext('2d');
+            const W = fc.width, H = fc.height;
+            const cx = W / 2, cy = H / 2;
+            let frame = 0;
+            const DURATION = 55;
+
+            // Screen shake
+            document.body.classList.add('screen-shaking');
+            setTimeout(() => document.body.classList.remove('screen-shaking'), 280);
+
+            // Pre-generate bolt paths (static per trigger = crisper look)
+            const bolts = Array.from({ length: 12 }, (_, i) => {
+                const baseAngle = (i / 12) * Math.PI * 2;
+                const pts = [{ x: 0, y: 0 }];
+                let bx = 0, by = 0;
+                for (let s = 0; s < 8; s++) {
+                    const perp   = baseAngle + Math.PI / 2;
+                    const jitter = (Math.random() - 0.5) * 45;
+                    bx += Math.cos(baseAngle) * (22 + Math.random() * 18) + Math.cos(perp) * jitter;
+                    by += Math.sin(baseAngle) * (22 + Math.random() * 18) + Math.sin(perp) * jitter;
+                    pts.push({ x: bx, y: by });
+                }
+                return pts;
+            });
+
+            function drawBF() {
+                fctx.clearRect(0, 0, W, H);
+                const t = frame / DURATION;
+
+                // Phase 1 (0–0.20): dark void rushes in
+                // Phase 2 (0.20–0.62): peak — energy crackles
+                // Phase 3 (0.62–1.00): fade out
+                let darkAlpha;
+                if      (t < 0.20) darkAlpha = (t / 0.20) * 0.90;
+                else if (t < 0.62) darkAlpha = 0.90;
+                else               darkAlpha = 0.90 * (1 - (t - 0.62) / 0.38);
+
+                fctx.fillStyle = `rgba(0,0,0,${darkAlpha})`;
+                fctx.fillRect(0, 0, W, H);
+
+                if (t > 0.18 && t < 0.78) {
+                    const ep = (t - 0.18) / 0.60;   // energy phase 0→1
+                    const ba = ep < 0.5 ? ep * 2 : Math.max(0, 1 - (ep - 0.5) * 2.2);
+
+                    // Central red glow
+                    const grd = fctx.createRadialGradient(cx, cy, 0, cx, cy, 170);
+                    grd.addColorStop(0,   `rgba(255,40,40,${ba * 0.72})`);
+                    grd.addColorStop(0.5, `rgba(180,10,10,${ba * 0.35})`);
+                    grd.addColorStop(1,   'transparent');
+                    fctx.beginPath(); fctx.arc(cx, cy, 170, 0, Math.PI * 2);
+                    fctx.fillStyle = grd; fctx.fill();
+
+                    // Cursed lightning
+                    fctx.save(); fctx.translate(cx, cy);
+                    bolts.forEach(pts => {
+                        fctx.beginPath(); fctx.moveTo(pts[0].x, pts[0].y);
+                        pts.slice(1).forEach(p => fctx.lineTo(p.x, p.y));
+                        fctx.strokeStyle = `rgba(255,80,80,${ba * 0.92})`;
+                        fctx.lineWidth    = 1.6;
+                        fctx.shadowBlur   = 16;
+                        fctx.shadowColor  = '#ff4444';
+                        fctx.stroke();
+                    });
+                    fctx.restore();
+                    fctx.shadowBlur = 0;
+
+                    // Expanding void ring
+                    const ringR = ep * Math.max(W, H) * 0.72;
+                    fctx.beginPath(); fctx.arc(cx, cy, ringR, 0, Math.PI * 2);
+                    fctx.strokeStyle = `rgba(255,50,50,${ba * 0.55})`;
+                    fctx.lineWidth   = 4; fctx.stroke();
+
+                    // White impact core (peaks mid-flash)
+                    if (ep > 0.12 && ep < 0.52) {
+                        const ca = Math.sin(((ep - 0.12) / 0.40) * Math.PI);
+                        fctx.beginPath(); fctx.arc(cx, cy, 20, 0, Math.PI * 2);
+                        fctx.fillStyle = `rgba(255,255,255,${ca * 0.95})`;
+                        fctx.fill();
+                    }
+                }
+
+                frame++;
+                if (frame <= DURATION) requestAnimationFrame(drawBF);
+                else fc.remove();
+            }
+            requestAnimationFrame(drawBF);
+        }
+
+        // =============================================
+        // 6. HOLLOW PURPLE
+        //    Phase 1: Blue (limitless) orb from left,
+        //             Red (diverge) orb from right
+        //    Phase 2: They converge, small vortex forms
+        //    Phase 3: Vortex expands across screen
+        //    Phase 4: White void flash, fade
+        // =============================================
+        let hpRunning = false;
+
+        function triggerHollowPurple() {
+            if (hpRunning) return;
+            hpRunning = true;
+
+            const hc = document.createElement('canvas');
+            hc.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:100000;pointer-events:none;';
+            hc.width  = window.innerWidth;
+            hc.height = window.innerHeight;
+            document.body.appendChild(hc);
+            const hctx     = hc.getContext('2d');
+            const W = hc.width, H = hc.height;
+            const cx = W / 2, cy = H / 2;
+
+            // Vortex particles — spiral inward once merge begins
+            const vParts = Array.from({ length: 110 }, () => ({
+                angle: Math.random() * Math.PI * 2,
+                r    : 80 + Math.random() * 240,
+                speed: 0.022 + Math.random() * 0.038,
+                size : 1.5  + Math.random() * 2.8,
+                hue  : 265  + Math.random() * 80
+            }));
+
+            let frame    = 0;
+            const TOTAL  = 210;   // ~3.5s at 60fps
+
+            function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+            function drawOrb(x, y, r, ir, og, alpha) {
+                // ir = inner rgba string (no alpha), og = outer rgba string
+                const g = hctx.createRadialGradient(x, y, 0, x, y, r);
+                g.addColorStop(0,    `rgba(255,255,255,${alpha})`);
+                g.addColorStop(0.22, ir.replace('XX', (alpha * 0.92).toFixed(2)));
+                g.addColorStop(0.65, og.replace('XX', (alpha * 0.48).toFixed(2)));
+                g.addColorStop(1,    'transparent');
+                hctx.beginPath(); hctx.arc(x, y, r, 0, Math.PI * 2);
+                hctx.fillStyle = g; hctx.fill();
+                // bright core dot
+                hctx.shadowBlur  = 38;
+                hctx.shadowColor = ir.replace('XX','1');
+                hctx.beginPath(); hctx.arc(x, y, r * 0.20, 0, Math.PI * 2);
+                hctx.fillStyle = `rgba(255,255,255,${alpha * 0.95})`;
+                hctx.fill(); hctx.shadowBlur = 0;
+            }
+
+            function drawVortex(radius, alpha) {
+                // Dim background
+                hctx.fillStyle = `rgba(0,0,0,${alpha * 0.80})`;
+                hctx.fillRect(0, 0, W, H);
+
+                // Outer purple halos
+                for (let i = 5; i >= 0; i--) {
+                    const hr = radius * (0.32 + i * 0.14);
+                    const hg = hctx.createRadialGradient(cx, cy, hr * 0.72, cx, cy, hr);
+                    hg.addColorStop(0, `rgba(155,0,255,${alpha * (0.28 - i * 0.04)})`);
+                    hg.addColorStop(1, 'transparent');
+                    hctx.beginPath(); hctx.arc(cx, cy, hr, 0, Math.PI * 2);
+                    hctx.fillStyle = hg; hctx.fill();
+                }
+
+                // Orbiting sparks
+                vParts.forEach(p => {
+                    p.angle += p.speed;
+                    p.r      = Math.max(6, p.r - 1.2 * alpha);
+                    const px = cx + Math.cos(p.angle) * p.r;
+                    const py = cy + Math.sin(p.angle) * p.r;
+                    hctx.beginPath(); hctx.arc(px, py, p.size, 0, Math.PI * 2);
+                    hctx.fillStyle = `hsla(${p.hue},100%,70%,${alpha * 0.82})`;
+                    hctx.fill();
+                });
+
+                // Spinning energy tendrils
+                hctx.save(); hctx.translate(cx, cy); hctx.rotate(frame * 0.022);
+                for (let i = 0; i < 9; i++) {
+                    const ang = (i / 9) * Math.PI * 2;
+                    const len = radius * 0.68;
+                    hctx.beginPath(); hctx.moveTo(0, 0);
+                    hctx.quadraticCurveTo(
+                        Math.cos(ang + 0.5) * len * 0.5,
+                        Math.sin(ang + 0.5) * len * 0.5,
+                        Math.cos(ang) * len,
+                        Math.sin(ang) * len
+                    );
+                    hctx.strokeStyle = `rgba(195,75,255,${alpha * 0.40})`;
+                    hctx.lineWidth = 2; hctx.stroke();
+                }
+                hctx.restore();
+
+                // Core orb
+                const cr  = radius * 0.30;
+                const cgr = hctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
+                cgr.addColorStop(0,    `rgba(255,255,255,${alpha * 0.96})`);
+                cgr.addColorStop(0.18, `rgba(235,145,255,${alpha * 0.88})`);
+                cgr.addColorStop(0.45, `rgba(145,0,255,${alpha * 0.70})`);
+                cgr.addColorStop(0.78, `rgba(55,0,140,${alpha * 0.38})`);
+                cgr.addColorStop(1,    'transparent');
+                hctx.beginPath(); hctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                hctx.fillStyle = cgr; hctx.fill();
+            }
+
+            let shook = false;
+
+            function animate() {
+                const t = frame / TOTAL;
+                hctx.clearRect(0, 0, W, H);
+
+                if (t < 0.36) {
+                    // TWO ORBS CONVERGE
+                    const p = ease(t / 0.36);
+                    hctx.fillStyle = `rgba(0,0,0,${p * 0.42})`;
+                    hctx.fillRect(0, 0, W, H);
+                    const bx = cx - W * 0.40 * (1 - p);
+                    const rx = cx + W * 0.40 * (1 - p);
+                    drawOrb(bx, cy, 36 + p * 24, 'rgba(0,155,255,XX)', 'rgba(0,50,200,XX)', p * 0.88 + 0.12);
+                    drawOrb(rx, cy, 36 + p * 24, 'rgba(255,55,25,XX)', 'rgba(155,0,0,XX)',  p * 0.88 + 0.12);
+
+                } else if (t < 0.60) {
+                    // VORTEX FORMS
+                    const p = ease((t - 0.36) / 0.24);
+                    drawVortex(50 + p * 135, 0.42 + p * 0.58);
+
+                } else if (t < 0.82) {
+                    // VORTEX EXPANDS
+                    const p = ease((t - 0.60) / 0.22);
+                    const maxR = Math.hypot(W, H) / 2;
+                    drawVortex(185 + p * (maxR - 185), 1.0);
+                    if (p > 0.28 && !shook) {
+                        shook = true;
+                        document.body.classList.add('screen-shaking');
+                        setTimeout(() => document.body.classList.remove('screen-shaking'), 420);
+                    }
+
+                } else {
+                    // WHITE FLASH
+                    const p  = (t - 0.82) / 0.18;
+                    const fa = p < 0.42 ? p / 0.42 : Math.max(0, 1 - (p - 0.42) / 0.58);
+                    hctx.fillStyle = `rgba(75,0,155,${(1 - fa) * 0.38})`;
+                    hctx.fillRect(0, 0, W, H);
+                    hctx.fillStyle = `rgba(255,255,255,${fa})`;
+                    hctx.fillRect(0, 0, W, H);
+                }
+
+                frame++;
+                if (frame <= TOTAL) requestAnimationFrame(animate);
+                else { hc.remove(); hpRunning = false; }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // =============================================
+        // 7. BINDINGS
+        // =============================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'b' || e.key === 'B') triggerBlackFlash();
+            if (e.key === 'h' || e.key === 'H') triggerHollowPurple();
+        });
+        if (btnFlashFixed) {
+            btnFlashFixed.addEventListener('click', (e) => { e.preventDefault(); triggerBlackFlash(); });
+        }
+
+    });
+    </script>
+    <script src="domain-theme.js"></script>
+</body>
+</html>

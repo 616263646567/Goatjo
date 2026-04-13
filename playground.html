@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOMAIN SELECTION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg: #050505;
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-red: #ff003c;
+            --neon-green: #00ff88;
+            --neon-orange: #ff9d00;
+            --neon-gold: #ffd700; /* ADDED: Hakari's Jackpot Color */
+            --grid-color: rgba(0, 243, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 50px 0;
+        }
+
+        /* --- BACKGROUND VIBES --- */
+        .bg-grid {
+            position: fixed; top: 0; left: 0; width: 200vw; height: 200vh;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: grid-move 20s linear infinite;
+            z-index: -1;
+        }
+        @keyframes grid-move { 0% { background-position: 0 0; } 100% { background-position: 0 1000px; } }
+
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            pointer-events: none; z-index: 999;
+        }
+
+        /* --- UI ELEMENTS --- */
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--neon-blue);
+            text-shadow: 0 0 30px var(--neon-blue);
+            animation: pulse-title 3s infinite alternate;
+            text-align: center;
+        }
+
+        @keyframes pulse-title {
+            from { text-shadow: 0 0 20px var(--neon-blue); }
+            to { text-shadow: 0 0 50px var(--neon-blue), 0 0 10px white; }
+        }
+
+        .card-container {
+            display: flex;
+            gap: 40px;
+            perspective: 1000px;
+            z-index: 10;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1400px;
+        }
+
+        /* --- GAME CARDS --- */
+        .game-card {
+            width: 300px;
+            height: 450px;
+            border: 2px solid #333;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(5px);
+            position: relative;
+            cursor: pointer;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            overflow: hidden;
+            clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
+        }
+
+        .game-card:hover {
+            transform: translateY(-20px) scale(1.05);
+            border-color: var(--neon-color);
+            box-shadow: 0 0 50px var(--neon-color);
+            z-index: 20;
+        }
+
+        .card-image-wrapper {
+            height: 60%;
+            width: 100%;
+            background-color: #1a0b1a; 
+            border-bottom: 1px solid #333;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .card-content {
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin: 0;
+            color: var(--neon-color);
+            text-shadow: 0 0 10px var(--neon-color);
+        }
+
+        .card-desc {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .play-btn {
+            margin-top: auto;
+            padding: 10px;
+            background: var(--neon-color);
+            color: black;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+            transition: 0.2s;
+        }
+        
+        .game-card:hover .play-btn {
+            background: white;
+            color: var(--neon-color);
+        }
+
+        /* --- SPECIFIC CARD STYLES --- */
+        
+        /* CARD 1: CHOSO */
+        .card-choso { --neon-color: var(--neon-red); }
+        .spinner-img {
+            width: 150px; height: auto;
+            animation: choso-spin 3s linear infinite;
+            filter: drop-shadow(0 0 15px red);
+        }
+        .card-choso:hover .spinner-img {
+            animation-duration: 0.5s; 
+            filter: drop-shadow(0 0 30px red);
+        }
+        @keyframes choso-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* CARD 2: DIH */
+        .card-dih { --neon-color: var(--neon-blue); }
+        .bg-dih {
+            width: 100%; height: 100%;
+            background-image: url('assets/images/gojo.png');
+            background-size: cover; background-position: center;
+            filter: grayscale(100%); transition: 0.4s;
+        }
+        .card-dih:hover .bg-dih { filter: grayscale(0%); }
+
+        /* CARD 3: TEN SHADOWS (MEGUMI) */
+        .card-megumi { --neon-color: var(--neon-green); }
+        .megumi-icon {
+            font-size: 5rem;
+            filter: drop-shadow(0 0 15px var(--neon-green));
+            transition: 0.3s;
+        }
+        .card-megumi:hover .megumi-icon {
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 30px var(--neon-green));
+        }
+
+        /* CARD 4: MALEVOLENT KITCHEN (SUKUNA) */
+        .card-sukuna { --neon-color: var(--neon-orange); }
+        .sukuna-icon {
+            font-size: 5rem;
+            filter: drop-shadow(0 0 15px var(--neon-orange));
+            transition: 0.1s;
+        }
+        .card-sukuna:hover .sukuna-icon {
+            animation: shake 0.2s infinite;
+            filter: drop-shadow(0 0 50px red);
+            color: #ff0044;
+        }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        /* --- NEW: CARD 5: IDLE DEATH GAMBLE (HAKARI) --- */
+        .card-hakari { --neon-color: var(--neon-gold); }
+        .hakari-icon {
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--neon-gold);
+            text-shadow: 0 0 20px var(--neon-gold);
+            transition: 0.3s;
+            letter-spacing: -5px;
+        }
+        .card-hakari:hover .hakari-icon {
+            animation: jackpot-flash 0.5s infinite alternate;
+        }
+        @keyframes jackpot-flash {
+            from { transform: scale(1); text-shadow: 0 0 20px gold; }
+            to { transform: scale(1.2); text-shadow: 0 0 60px red, 0 0 20px yellow; color: #fff; }
+        }
+
+
+        /* --- HOME BUTTON --- */
+        .back-home {
+            position: absolute;
+            top: 30px; left: 30px;
+            color: #555;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid #333;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+        .back-home:hover {
+            color: white;
+            border-color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="scanlines"></div>
+
+    <a href="index.html?nointro=1" class="back-home"><< RETURN TO INDEX</a>
+
+    <h1>SELECT MISSION</h1>
+
+    <div class="card-container">
+
+        <a href="brotherhood.html" class="game-card card-choso">
+            <div class="card-image-wrapper">
+                <img src="assets/images/choso.png" class="spinner-img" alt="Spinning Choso">
+            </div>
+            <div class="card-content">
+                <div class="card-title">PIERCING BLOOD</div>
+                <div class="card-desc">Convergence active. The older brother must protect the younger.</div>
+            </div>
+            <div class="play-btn">DEPLOY</div>
+        </a>
+
+        <a href="dih.html" class="game-card card-dih">
+            <div class="card-image-wrapper">
+                 <img src="assets/images/aish.png" class="dihr-img" alt="Gojo dancing">
+            </div>
+            <div class="card-content">
+                <div class="card-title">D.I.H. ARCHIVES</div>
+                <div class="card-desc">Access the Digital Information Hub. Classified sorcerer data.</div>
+            </div>
+            <div class="play-btn">ACCESS</div>
+        </a>
+
+        <a href="ten_shadows.html" class="game-card card-megumi">
+            <div class="card-image-wrapper">
+                 <img src="assets/images/hi.jpg" class="shadows-img" alt="Megumi">
+            </div>
+            <div class="card-content">
+                <div class="card-title">TEN SHADOWS</div>
+                <div class="card-desc">Summon Shikigami. Manage your shadows. Adapt to the curses.</div>
+            </div>
+            <div class="play-btn">SUMMON</div>
+        </a>
+
+        <a href="sukuna.html" class="game-card card-sukuna">
+            <div class="card-image-wrapper">
+                 <img src="assets/images/kitchen.jpg" class="cook-img" alt="Malevolent Kitchen">
+            </div>
+            <div class="card-content">
+                <div class="card-title">MALEVOLENT KITCHEN</div>
+                <div class="card-desc">Cleave & Dismantle. Slice the ingredients. Open the Furnace.</div>
+            </div>
+            <div class="play-btn">SLAUGHTER</div>
+        </a>
+
+        <a href="hakari.html" class="game-card card-hakari">
+            <div class="card-image-wrapper">
+                 <div class="hakari-icon">777</div>
+            </div>
+            <div class="card-content">
+                <div class="card-title">IDLE DEATH GAMBLE</div>
+                <div class="card-desc">Restless Gambler. Fight to survive. Hit the JACKPOT for Immortality.</div>
+            </div>
+            <div class="play-btn">GAMBLE</div>
+        </a>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJK — Domain Clash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Shippori+Mincho:wght@400;600;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ─── TOKENS ─── */
+        :root {
+            --gojo-blue: #33ccff;
+            --gojo-deep: #0a1f3a;
+            --sukuna-red: #ff3333;
+            --sukuna-deep: #1a0000;
+            --ink: #05030b;
+            --paper: #f5f0e8;
+            --transition-speed: 0.7s;
+        }
+
+        /* ─── RESET ─── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ─── BODY ─── */
+        body {
+            min-height: 100vh;
+            background: var(--ink);
+            color: #f0f0f0;
+            font-family: 'Space Mono', monospace;
+            overflow-x: hidden;
+            cursor: none;
+            transition: background var(--transition-speed) ease;
+        }
+
+        /* ─── CUSTOM CURSOR ─── */
+        #cursor {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.15s ease, width 0.2s, height 0.2s;
+            transform: translate(-50%, -50%);
+        }
+        #cursor-trail {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 9998;
+            transform: translate(-50%, -50%);
+            transition: left 0.12s ease, top 0.12s ease;
+        }
+
+        /* ─── GRAIN OVERLAY ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.4;
+        }
+
+        /* ─── DOMAIN BACKGROUND ─── */
+        #domain-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        /* ─── FLASH EFFECT ─── */
+        #flash {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* ─── SEAL RING ANIMATION ─── */
+        #seal-container {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .seal-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+
+        /* ─── PARTICLES ─── */
+        #particles {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+            animation: floatUp linear infinite;
+        }
+        @keyframes floatUp {
+            0%   { opacity: 0; transform: translateY(0) scale(1); }
+            10%  { opacity: 1; }
+            90%  { opacity: 0.6; }
+            100% { opacity: 0; transform: translateY(-120vh) scale(0.3); }
+        }
+
+        /* ─── LAYOUT ─── */
+        .page-wrapper {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 20px 60px;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            width: min(100%, 960px);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 48px;
+            padding: 14px 20px;
+            background: rgba(0,0,0,0.55);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 999px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .nav-link {
+            padding: 7px 18px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.55);
+            text-decoration: none;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            transition: color 0.25s, border-color 0.25s, background 0.25s, box-shadow 0.25s;
+            position: relative;
+        }
+        .nav-link:hover {
+            color: #fff;
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.06);
+        }
+        .nav-link.active {
+            color: #fff;
+            border-color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+        }
+        body.gojo-active .nav-link:hover,
+        body.gojo-active .nav-link.active {
+            color: var(--gojo-blue);
+            border-color: rgba(51,204,255,0.4);
+            box-shadow: 0 0 12px rgba(51,204,255,0.15);
+        }
+        body.sukuna-active .nav-link:hover,
+        body.sukuna-active .nav-link.active {
+            color: var(--sukuna-red);
+            border-color: rgba(255,51,51,0.4);
+            box-shadow: 0 0 12px rgba(255,51,51,0.15);
+        }
+
+        /* ─── MAIN CARD ─── */
+        .card {
+            width: min(100%, 260px);
+            padding: 16px 16px 18px;
+            background: rgba(0,0,0,0.62);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 28px;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 60%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+
+        /* ─── CORNER MARKS ─── */
+        .card-corner {
+            position: absolute;
+            width: 20px; height: 20px;
+            opacity: 0.35;
+            transition: opacity 0.4s;
+        }
+        .card-corner.tl { top: 14px; left: 14px; border-top: 1.5px solid #fff; border-left: 1.5px solid #fff; }
+        .card-corner.tr { top: 14px; right: 14px; border-top: 1.5px solid #fff; border-right: 1.5px solid #fff; }
+        .card-corner.bl { bottom: 14px; left: 14px; border-bottom: 1.5px solid #fff; border-left: 1.5px solid #fff; }
+        .card-corner.br { bottom: 14px; right: 14px; border-bottom: 1.5px solid #fff; border-right: 1.5px solid #fff; }
+        body.gojo-active .card-corner { opacity: 0.5; border-color: var(--gojo-blue); }
+        body.sukuna-active .card-corner { opacity: 0.5; border-color: var(--sukuna-red); }
+
+        /* ─── TITLE ─── */
+        .eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.68rem;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 16px;
+        }
+        h1 {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: 0.02em;
+            background: linear-gradient(135deg, #ffffff 30%, rgba(255,255,255,0.5));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: background 0.6s ease;
+            margin-bottom: 2px;
+        }
+        body.gojo-active h1 {
+            background: linear-gradient(135deg, var(--gojo-blue) 20%, #a8eeff 60%, #fff);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        body.sukuna-active h1 {
+            background: linear-gradient(135deg, var(--sukuna-red) 20%, #ffaaaa 60%, #fff);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        .subtitle-kanji {
+            font-family: 'Shippori Mincho', serif;
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
+            font-weight: 600;
+            letter-spacing: 0.3em;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 28px;
+            display: block;
+            transition: color 0.6s;
+        }
+        body.gojo-active .subtitle-kanji { color: rgba(51,204,255,0.3); }
+        body.sukuna-active .subtitle-kanji { color: rgba(255,51,51,0.3); }
+
+        /* ─── DIVIDER ─── */
+        .divider {
+            width: 100%;
+            height: 1px;
+            margin: 28px 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            border: none;
+            position: relative;
+        }
+        .divider::after {
+            content: '✦';
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%,-50%);
+            font-size: 10px;
+            color: rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.6);
+            padding: 0 6px;
+        }
+        body.gojo-active .divider::after { color: rgba(51,204,255,0.35); }
+        body.sukuna-active .divider::after { color: rgba(255,51,51,0.35); }
+
+        /* ─── DESCRIPTION ─── */
+        .desc {
+            max-width: 560px;
+            margin: 0 auto 8px;
+            font-size: 0.88rem;
+            line-height: 1.75;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.03em;
+        }
+
+        /* ─── STATUS BADGE ─── */
+        #status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 24px auto 0;
+            padding: 8px 20px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03);
+            transition: all 0.5s ease;
+        }
+        #status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.4; transform: scale(0.7); }
+        }
+        body.gojo-active #status-badge {
+            color: rgba(51,204,255,0.7);
+            border-color: rgba(51,204,255,0.2);
+            background: rgba(51,204,255,0.05);
+        }
+        body.gojo-active #status-dot { background: var(--gojo-blue); }
+        body.sukuna-active #status-badge {
+            color: rgba(255,51,51,0.7);
+            border-color: rgba(255,51,51,0.2);
+            background: rgba(255,51,51,0.05);
+        }
+        body.sukuna-active #status-dot { background: var(--sukuna-red); }
+
+        /* ─── BUTTONS ─── */
+        .domain-panel {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .domain-btn {
+            position: relative;
+            padding: 0;
+            width: 96px;
+            border: none;
+            background: transparent;
+            cursor: none;
+            outline: none;
+        }
+        .btn-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 8px 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            transition: transform 0.3s cubic-bezier(.22,.68,0,1.2),
+                        box-shadow 0.35s ease,
+                        background 0.3s ease,
+                        border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-inner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .domain-btn:hover .btn-inner {
+            transform: translateY(-4px) scale(1.02);
+        }
+        .domain-btn:active .btn-inner { transform: translateY(0) scale(0.98); }
+
+        /* Gojo btn */
+        .btn-gojo .btn-inner {
+            border-color: rgba(51,204,255,0.2);
+            box-shadow: 0 0 24px rgba(51,204,255,0.08);
+        }
+        .btn-gojo .btn-inner::before {
+            background: radial-gradient(ellipse at 50% 0%, rgba(51,204,255,0.12), transparent 70%);
+        }
+        .btn-gojo:hover .btn-inner {
+            border-color: rgba(51,204,255,0.5);
+            box-shadow: 0 12px 40px rgba(51,204,255,0.2), 0 0 0 1px rgba(51,204,255,0.15);
+            background: rgba(51,204,255,0.06);
+        }
+        .btn-gojo:hover .btn-inner::before { opacity: 1; }
+        body.gojo-active .btn-gojo .btn-inner {
+            border-color: rgba(51,204,255,0.6);
+            box-shadow: 0 0 40px rgba(51,204,255,0.25), inset 0 0 20px rgba(51,204,255,0.06);
+        }
+
+        /* Sukuna btn */
+        .btn-sukuna .btn-inner {
+            border-color: rgba(255,51,51,0.2);
+            box-shadow: 0 0 24px rgba(255,51,51,0.08);
+        }
+        .btn-sukuna .btn-inner::before {
+            background: radial-gradient(ellipse at 50% 0%, rgba(255,51,51,0.12), transparent 70%);
+        }
+        .btn-sukuna:hover .btn-inner {
+            border-color: rgba(255,51,51,0.5);
+            box-shadow: 0 12px 40px rgba(255,51,51,0.2), 0 0 0 1px rgba(255,51,51,0.15);
+            background: rgba(255,51,51,0.06);
+        }
+        .btn-sukuna:hover .btn-inner::before { opacity: 1; }
+        body.sukuna-active .btn-sukuna .btn-inner {
+            border-color: rgba(255,51,51,0.6);
+            box-shadow: 0 0 40px rgba(255,51,51,0.25), inset 0 0 20px rgba(255,51,51,0.06);
+        }
+
+        /* Btn content */
+        .btn-kanji {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 3px;
+            transition: text-shadow 0.3s;
+        }
+        .btn-gojo .btn-kanji { color: var(--gojo-blue); }
+        .btn-sukuna .btn-kanji { color: var(--sukuna-red); }
+        .btn-gojo:hover .btn-kanji { text-shadow: 0 0 20px rgba(51,204,255,0.8); }
+        .btn-sukuna:hover .btn-kanji { text-shadow: 0 0 20px rgba(255,51,51,0.8); }
+
+        .btn-label {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 0.42rem;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+        }
+        .btn-gojo .btn-label { color: rgba(51,204,255,0.9); }
+        .btn-sukuna .btn-label { color: rgba(255,51,51,0.9); }
+
+        .btn-sub { display: none; }
+
+        /* Shimmer line on btn */
+        .btn-shimmer {
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+            transition: left 0.5s ease;
+            pointer-events: none;
+        }
+        .domain-btn:hover .btn-shimmer { left: 160%; }
+
+        /* ─── BACKGROUND IMAGE (the big one that persists) ─── */
+        #bg-image {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.9s ease;
+        }
+        #bg-image.visible { opacity: 1; }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes rippleOut {
+            0%   { transform: scale(0); opacity: 0.8; }
+            100% { transform: scale(6); opacity: 0; }
+        }
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: rippleOut 1.2s ease-out forwards;
+        }
+
+        @keyframes revealIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .reveal {
+            opacity: 0;
+            animation: revealIn 0.7s ease forwards;
+        }
+        .reveal:nth-child(1) { animation-delay: 0.1s; }
+        .reveal:nth-child(2) { animation-delay: 0.25s; }
+        .reveal:nth-child(3) { animation-delay: 0.4s; }
+        .reveal:nth-child(4) { animation-delay: 0.55s; }
+        .reveal:nth-child(5) { animation-delay: 0.7s; }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 600px) {
+            .card { padding: 36px 24px 40px; }
+            nav { gap: 4px; padding: 10px 12px; }
+            .nav-link { padding: 5px 12px; font-size: 0.65rem; }
+            .domain-btn { width: 180px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom cursor -->
+    <div id="cursor"></div>
+    <div id="cursor-trail"></div>
+
+    <!-- Background image layer -->
+    <div id="bg-image"></div>
+
+    <!-- Tinted domain overlay -->
+    <div id="domain-bg"></div>
+
+    <!-- Flash effect -->
+    <div id="flash"></div>
+
+    <!-- Seal rings container -->
+    <div id="seal-container">
+        <div class="seal-ring" style="width:300px;height:300px"></div>
+        <div class="seal-ring" style="width:500px;height:500px"></div>
+        <div class="seal-ring" style="width:700px;height:700px"></div>
+    </div>
+
+    <!-- Particles -->
+    <div id="particles"></div>
+
+    <!-- Page content -->
+    <div class="page-wrapper">
+
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html"      class="nav-link">Home</a>
+            <a href="playground.html" class="nav-link">Playground</a>
+            <a href="gallery.html"    class="nav-link">Gallery</a>
+            <a href="interactiv.html" class="nav-link">Interactive</a>
+            <a href="about.html"      class="nav-link">About</a>
+            <a href="contact.html"    class="nav-link">Contact</a>
+            <a href="style.html"      class="nav-link active">Domain</a>
+        </nav>
+
+        <!-- Main card -->
+        <article class="card">
+            <div class="card-corner tl"></div>
+            <div class="card-corner tr"></div>
+            <div class="card-corner bl"></div>
+            <div class="card-corner br"></div>
+
+            <h1 class="reveal">Domain<br>Clash</h1>
+
+            <div class="domain-panel">
+                <button id="btn-gojo" class="domain-btn btn-gojo" aria-label="Activate Infinite Void">
+                    <div class="btn-inner">
+                        <div class="btn-shimmer"></div>
+                        <span class="btn-kanji">無量空処</span>
+                        <span class="btn-label">Infinite Void</span>
+                        <span class="btn-sub">Gojo Satoru</span>
+                    </div>
+                </button>
+
+                <button id="btn-sukuna" class="domain-btn btn-sukuna" aria-label="Activate Malevolent Shrine">
+                    <div class="btn-inner">
+                        <div class="btn-shimmer"></div>
+                        <span class="btn-kanji">伏魔御廚子</span>
+                        <span class="btn-label">Malevolent Shrine</span>
+                        <span class="btn-sub">Ryomen Sukuna</span>
+                    </div>
+                </button>
+            </div>
+        </article>
+    </div>
+
+    <script src="domain-theme.js"></script>
+    <script>
+    (() => {
+        /* ── CURSOR ── */
+        const cursor = document.getElementById('cursor');
+        const trail  = document.getElementById('cursor-trail');
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top  = e.clientY + 'px';
+            trail.style.left  = e.clientX + 'px';
+            trail.style.top   = e.clientY + 'px';
+        });
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'translate(-50%,-50%) scale(2.5)';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+            });
+        });
+
+        /* ── PARTICLES ── */
+        const particleContainer = document.getElementById('particles');
+        let particleColor = 'rgba(255,255,255,0.4)';
+
+        function spawnParticle() {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 4 + 1;
+            const x    = Math.random() * 100;
+            const dur  = Math.random() * 8 + 6;
+            const delay= Math.random() * 4;
+            p.style.cssText = `
+                width:${size}px; height:${size}px;
+                left:${x}%; bottom:${Math.random()*20}%;
+                background:${particleColor};
+                box-shadow: 0 0 ${size*2}px ${particleColor};
+                animation-duration:${dur}s;
+                animation-delay:${delay}s;
+            `;
+            particleContainer.appendChild(p);
+            setTimeout(() => p.remove(), (dur + delay) * 1000);
+        }
+        setInterval(spawnParticle, 400);
+
+        /* ── SOUNDS ── */
+        const sounds = {
+            gojo:   new Audio('assets/audio/gojo_domain.mp3'),
+            sukuna: new Audio('assets/audio/sukuna_domain.mp3'),
+        };
+
+        /* ── DOMAIN SWITCH ── */
+        const body        = document.body;
+        const bgImage     = document.getElementById('bg-image');
+        const domainBg    = document.getElementById('domain-bg');
+        const flash       = document.getElementById('flash');
+        const sealEl      = document.getElementById('seal-container');
+        const statusText  = document.getElementById('status-text');
+        const rings       = sealEl.querySelectorAll('.seal-ring');
+
+        let currentMode = null;
+
+        function spawnRipple(x, y, color) {
+            const r = document.createElement('div');
+            r.className = 'ripple';
+            const size = 80;
+            r.style.cssText = `
+                left:${x - size/2}px; top:${y - size/2}px;
+                width:${size}px; height:${size}px;
+                background: radial-gradient(circle, ${color}55, transparent 70%);
+                border: 1px solid ${color}88;
+            `;
+            document.body.appendChild(r);
+            setTimeout(() => r.remove(), 1200);
+        }
+
+        function animateSeal(color) {
+            rings.forEach(r => {
+                r.style.borderColor = color + '40';
+                r.style.boxShadow = `0 0 20px ${color}22`;
+            });
+            sealEl.style.opacity = '1';
+            rings.forEach((r, i) => {
+                r.style.animation = `none`;
+                r.offsetHeight; // reflow
+                r.style.transition = `transform ${0.8 + i * 0.2}s ease`;
+                r.style.transform = 'scale(0)';
+                setTimeout(() => {
+                    r.style.transform = 'scale(1)';
+                }, 50);
+            });
+            setTimeout(() => {
+                sealEl.style.opacity = '0';
+            }, 1000);
+        }
+
+        function flashScreen(color) {
+            flash.style.background = color;
+            flash.style.opacity = '0.18';
+            flash.style.transition = 'opacity 0.05s';
+            setTimeout(() => {
+                flash.style.transition = 'opacity 0.8s ease';
+                flash.style.opacity = '0';
+            }, 60);
+        }
+
+        function switchDomain(mode, event) {
+            currentMode = mode;
+            if (window.DomainTheme) {
+                DomainTheme.setMode(mode);
+            }
+
+            const isGojo   = mode === 'gojo';
+            const color    = isGojo ? '#33ccff' : '#ff3333';
+            const imgSrc   = isGojo ? 'assets/images/voidd.jpg' : 'assets/images/yes.png';
+            const bgTint   = isGojo
+                ? 'linear-gradient(180deg, rgba(1,10,24,0.75) 0%, rgba(0,0,0,0.9) 100%)'
+                : 'linear-gradient(180deg, rgba(16,0,0,0.75) 0%, rgba(0,0,0,0.9) 100%)';
+
+            /* play sound */
+            const snd = sounds[mode];
+            snd.currentTime = 0;
+            snd.play().catch(() => {});
+
+            /* swap classes */
+            body.classList.toggle('gojo-active',  isGojo);
+            body.classList.toggle('sukuna-active', !isGojo);
+
+            /* update particle color */
+            particleColor = isGojo ? 'rgba(51,204,255,0.5)' : 'rgba(255,60,60,0.5)';
+
+            /* background image */
+            bgImage.style.backgroundImage = `url('${imgSrc}')`;
+            bgImage.classList.add('visible');
+
+            /* tinted overlay */
+            domainBg.style.background = bgTint;
+            domainBg.style.opacity = '0.85';
+
+            /* status badge */
+            statusText.textContent = isGojo ? 'Infinite Void — Active' : 'Malevolent Shrine — Active';
+
+            /* effects */
+            if (event) spawnRipple(event.clientX, event.clientY, color);
+            flashScreen(color);
+            animateSeal(color);
+        }
+
+        /* ── BUTTON EVENTS ── */
+        document.getElementById('btn-gojo').addEventListener('click', e => switchDomain('gojo', e));
+        document.getElementById('btn-sukuna').addEventListener('click', e => switchDomain('sukuna', e));
+
+        /* ── ACTIVE NAV HIGHLIGHT ── */
+        const currentPage = location.pathname.split('/').pop() || 'index.html';
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPage) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+
+    })();
+    </script>
+</body>
+</html>

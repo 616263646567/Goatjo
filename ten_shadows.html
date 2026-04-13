@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJK ARCADE: TEN SHADOWS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        :root {
+            --bg-color: #050a05;
+            --shadow-green: #00ff88;
+            --shadow-ink: #1a1a1a;
+            --mahoraga-gold: #ffd700;
+        }
+
+        body {
+            margin: 0; background-color: var(--bg-color); color: white;
+            font-family: 'Orbitron', sans-serif; overflow: hidden;
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            user-select: none; cursor: crosshair;
+        }
+
+        .back-home {
+            position: fixed; top: 20px; left: 20px; color: white; text-decoration: none;
+            border: 1px solid #555; padding: 8px 15px; font-size: 0.8rem; z-index: 100;
+            background: rgba(0,0,0,0.5); border-radius: 4px;
+        }
+        .back-home:hover { border-color: var(--shadow-green); color: var(--shadow-green); }
+
+        /* --- STAGE --- */
+        #game-stage {
+            width: 900px; height: 600px; 
+            border: 4px solid var(--shadow-green);
+            background: linear-gradient(to bottom, #0a110a, #000);
+            position: relative; overflow: hidden; border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.1);
+        }
+
+        /* --- AIMING CROSSHAIR --- */
+        #aim-line {
+            position: absolute; left: 0; width: 100%; height: 2px;
+            background: rgba(0, 255, 136, 0.3);
+            pointer-events: none; z-index: 5;
+            display: none;
+        }
+
+        /* --- HUD --- */
+        #hud {
+            position: absolute; top: 0; left: 0; width: 100%; padding: 20px;
+            display: flex; justify-content: space-between; z-index: 20;
+            pointer-events: none;
+        }
+
+        #energy-container {
+            position: absolute; bottom: 30px; left: 30px; width: 300px;
+            z-index: 20; pointer-events: none;
+        }
+        .energy-label { font-size: 0.8rem; color: var(--shadow-green); margin-bottom: 5px; }
+        #energy-bar-bg { width: 100%; height: 20px; background: #222; border: 2px solid #444; }
+        #energy-fill { 
+            width: 100%; height: 100%; background: var(--shadow-green); 
+            box-shadow: 0 0 15px vsar(--shadow-green);
+            transition: width 0.1s linear;
+        }
+
+        #deck {
+            position: absolute; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 20;
+        }
+        .card {
+            width: 80px; height: 100px; background: rgba(0,0,0,0.8);
+            border: 2px solid #555; border-radius: 8px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.7rem; color: #aaa; transition: 0.2s;
+            position: relative;
+        }
+        .card.affordable { border-color: var(--shadow-green); color: white; cursor: pointer; box-shadow: 0 0 10px var(--shadow-green); }
+        .card.active { transform: scale(0.95); background: #222; }
+        .card-cost { position: absolute; top: 5px; right: 5px; color: var(--shadow-green); font-weight: bold; }
+        .card-key { position: absolute; top: 5px; left: 5px; background: #fff; color: #000; width: 15px; height: 15px; border-radius: 50%; text-align: center; line-height: 15px; font-weight: bold;}
+        .card-icon { font-size: 2rem; margin-bottom: 5px; }
+
+        /* --- ENTITIES & IMAGES --- */
+        #megumi, .dog, .nue, .elephant, .enemy, #hand-sign-box, #mahoraga-sprite {
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent; 
+        }
+
+        /* ================================================================
+           vvv  IMAGE SETTINGS - ADD YOUR NEW FILES HERE  vvv
+           ================================================================
+        */
+
+        #megumi {
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%); 
+            width: 80px; height: 120px;
+            background-image: url('assets/images/999.png'); 
+            z-index: 10;
+        }
+
+        /* HAND SIGN POPUP (Appears over Megumi) */
+        #hand-sign-box {
+            position: absolute; left: 30px; top: 35%; 
+            width: 100px; height: 100px;
+            z-index: 100;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.2s;
+            filter: drop-shadow(0 0 10px var(--shadow-green));
+            /* Placeholder - Logic sets the actual image in JS */
+            background-image: none; 
+        }
+
+        /* MAHORAGA BIG SPRITE */
+        #mahoraga-sprite {
+            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 400px;
+            z-index: 40;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 1s;
+            /* CHANGE THIS URL TO YOUR FILE */
+            background-image: url('assets/images/mahoraga_full.png');
+            filter: drop-shadow(0 0 20px gold);
+        }
+
+        .dog { 
+            width: 70px; height: 50px; 
+            background-image: url('assets/images/dog.png'); 
+            filter: drop-shadow(0 0 5px black);
+        }
+
+        .nue { 
+            width: 80px; height: 60px; 
+            background-image: url('assets/images/nue.png'); 
+            filter: drop-shadow(0 0 5px orange);
+        }
+
+        .elephant { 
+            width: 120px; height: 100px; 
+            background-image: url('assets/images/max.PNG'); 
+            filter: drop-shadow(0 0 5px magenta);
+        }
+
+        .enemy {
+            position: absolute; width: 80px; height: 100px; 
+            background-image: url('assets/images/Curse.webp'); 
+            z-index: 12;
+            filter: drop-shadow(0 0 5px red);
+            transform: scaleX(-1); 
+        }
+
+        /* ================================================================ */
+
+        .shadow-hands {
+            position: absolute; left: 80px; width: 80px; height: 80px;
+            background: radial-gradient(circle, black, transparent); opacity: 0.6;
+            animation: breathe 2s infinite; pointer-events: none; transition: top 0.1s ease-out;
+            z-index: 9;
+        }
+        @keyframes breathe { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        .shikigami {
+            position: absolute; z-index: 15;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        /* --- MAHORAGA VFX --- */
+        #mahoraga-wheel {
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            width: 100px; height: 100px; border: 5px solid var(--mahoraga-gold);
+            border-radius: 50%; display: none; z-index: 50;
+            box-shadow: 0 0 30px var(--mahoraga-gold);
+            background: rgba(0,0,0,0.5);
+        }
+        .spin { animation: spin-wheel 1s infinite linear; }
+        @keyframes spin-wheel { 100% { transform: translateX(-50%) rotate(360deg); } }
+        
+        #slash-fx {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none; z-index: 60;
+        }
+        .flash { animation: flash-anim 0.2s ease-out; }
+        @keyframes flash-anim { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+        /* OVERLAYS */
+        .overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .hidden { display: none !important; }
+        .btn {
+            border: 2px solid var(--shadow-green); color: var(--shadow-green); background: transparent;
+            padding: 15px 40px; font-family: 'Orbitron'; cursor: pointer; text-transform: uppercase;
+            font-size: 1.2rem; margin-top: 20px; transition: 0.2s;
+        }
+        .btn:hover { background: var(--shadow-green); color: black; }
+
+        .dmg-text {
+            position: absolute; color: white; font-weight: bold; pointer-events: none;
+            animation: floatUp 0.5s linear forwards; z-index: 100; font-size: 20px;
+            text-shadow: 0 0 3px black;
+        }
+        @keyframes floatUp { to { transform: translateY(-50px); opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <a href="playground.html" class="back-home">⬅ BACK TO SELECT</a>
+
+    <div id="game-stage">
+        <div id="aim-line"></div> 
+
+        <div id="hud">
+            <div style="font-size: 1.5rem;">WAVE: <span id="wave-count">1</span></div>
+            <div>SCORE: <span id="score">0</span></div>
+        </div>
+
+        <div id="megumi"></div>
+        <div id="hand-sign-box"></div> <div class="shadow-hands" id="shadow-cursor"></div>
+
+        <div id="mahoraga-sprite"></div> <div id="mahoraga-wheel"></div>
+        <div id="slash-fx"></div>
+
+        <div id="energy-container">
+            <div class="energy-label">SHADOW ENERGY (HOLD SPACE TO CHARGE)</div>
+            <div id="energy-bar-bg"><div id="energy-fill"></div></div>
+        </div>
+
+        <div id="deck">
+            <div id="card-1" class="card">
+                <div class="card-key">1</div>
+                <div class="card-cost">30</div>
+                <div class="card-icon">🐺</div>
+                <div>DOG</div>
+            </div>
+            <div id="card-2" class="card">
+                <div class="card-key">2</div>
+                <div class="card-cost">50</div>
+                <div class="card-icon">🦅</div>
+                <div>NUE</div>
+            </div>
+            <div id="card-3" class="card">
+                <div class="card-key">3</div>
+                <div class="card-cost">80</div>
+                <div class="card-icon">🐘</div>
+                <div>MAX</div>
+            </div>
+            <div id="card-4" class="card" style="border-color: var(--mahoraga-gold); color: var(--mahoraga-gold);">
+                <div class="card-key">4</div>
+                <div class="card-cost">∞</div>
+                <div class="card-icon">⚙️</div>
+                <div>RAGA</div>
+            </div>
+        </div>
+
+        <div id="start-screen" class="overlay">
+            <h1 style="color: var(--shadow-green);">TEN SHADOWS</h1>
+            <p style="color: #888; text-align: center;">
+                AIM WITH MOUSE.<br>
+                [1] DIVINE DOG (Fast, Melee)<br>
+                [2] NUE (Lightning Beam)<br>
+                [3] MAX ELEPHANT (Massive Crash)<br>
+                [4] MAHORAGA (Adapts to Everything)<br>
+                <span style="color:white">[SPACE] HOLD TO RECHARGE ENERGY</span>
+            </p>
+            <button class="btn" onclick="Game.start()">SUMMON</button>
+        </div>
+
+        <div id="game-over" class="overlay hidden">
+            <h1 style="color: red;">OUT OF SHADOWS</h1>
+            <p>SCORE: <span id="final-score">0</span></p>
+            <button class="btn" onclick="Game.start()">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const AudioFX = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            play(freq, type, dur, vol=0.1) {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = type; o.frequency.value = freq;
+                g.gain.setValueAtTime(vol, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + dur);
+            },
+            spawn() { this.play(200, 'triangle', 0.1); },
+            zap() { this.play(600, 'sawtooth', 0.2); },
+            crash() { this.play(50, 'square', 0.5, 0.3); },
+            raga() { this.play(100, 'sine', 1.0, 0.5); }
+        };
+
+        const Game = {
+            active: false,
+            energy: 100,
+            maxEnergy: 100,
+            score: 0,
+            wave: 1,
+            keys: {},
+            entities: [],
+            enemies: [],
+            mahoragaCharge: 0,
+            mouseY: 300,
+            
+            dom: {
+                stage: document.getElementById('game-stage'),
+                energy: document.getElementById('energy-fill'),
+                score: document.getElementById('score'),
+                wave: document.getElementById('wave-count'),
+                aimLine: document.getElementById('aim-line'),
+                shadowCursor: document.getElementById('shadow-cursor'),
+                handSignBox: document.getElementById('hand-sign-box'),
+                mahoragaSprite: document.getElementById('mahoraga-sprite'),
+                cards: [
+                    document.getElementById('card-1'),
+                    document.getElementById('card-2'),
+                    document.getElementById('card-3'),
+                    document.getElementById('card-4')
+                ]
+            },
+
+            init() {
+                window.addEventListener('keydown', e => {
+                    this.keys[e.key] = true;
+                    if(this.active) {
+                        if(e.key === '1') this.summon(1);
+                        if(e.key === '2') this.summon(2);
+                        if(e.key === '3') this.summon(3);
+                        if(e.key === '4') this.summon(4);
+                    }
+                });
+                window.addEventListener('keyup', e => this.keys[e.key] = false);
+
+                this.dom.stage.addEventListener('mousemove', e => {
+                    const rect = this.dom.stage.getBoundingClientRect();
+                    let y = e.clientY - rect.top;
+                    if (y < 20) y = 20;
+                    if (y > 580) y = 580;
+                    this.mouseY = y;
+                    
+                    if(this.active) {
+                        this.dom.aimLine.style.top = y + 'px';
+                        this.dom.shadowCursor.style.top = (y - 40) + 'px'; 
+                    }
+                });
+            },
+
+            start() {
+                this.active = true;
+                this.score = 0;
+                this.wave = 1;
+                this.energy = 100;
+                this.mahoragaCharge = 0;
+                this.entities = [];
+                this.enemies = [];
+                
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.querySelectorAll('.shikigami, .enemy, .dmg-text').forEach(e => e.remove());
+                
+                this.dom.aimLine.style.display = 'block';
+
+                this.loop();
+                if(this.spawnLoop) clearInterval(this.spawnLoop);
+                this.spawnLoop = setInterval(() => this.spawnEnemy(), 2000);
+            },
+
+            // --- NEW FUNCTION TO SHOW HAND SIGNS ---
+            showHandSign(type) {
+                // Map the input key (1,2,3,4) to your image files
+                const signImages = {
+                    1: "url('assets/images/hand_dog.png')",
+                    2: "url('assets/images/hand_nue.png')",
+                    3: "url('assets/images/hand_max.png')",
+                    4: "url('assets/images/hand_raga.png')"
+                };
+
+                const box = this.dom.handSignBox;
+                
+                // Set the image
+                if (signImages[type]) {
+                    box.style.backgroundImage = signImages[type];
+                } else {
+                    // Fallback if image not found
+                    box.style.backgroundImage = "none";
+                }
+
+                // Make it visible
+                box.style.opacity = 1;
+                
+                // Hide it after 1 second
+                if(this.handTimer) clearTimeout(this.handTimer);
+                this.handTimer = setTimeout(() => {
+                    box.style.opacity = 0;
+                }, 1000);
+            },
+
+            summon(type) {
+                const costs = { 1: 30, 2: 50, 3: 80, 4: 999 };
+                
+                if(type === 4) {
+                    if(this.mahoragaCharge >= 100) {
+                        this.showHandSign(4); // Show Raga hands
+                        this.activateMahoraga();
+                    }
+                    return;
+                }
+
+                if(this.energy >= costs[type]) {
+                    this.energy -= costs[type];
+                    AudioFX.spawn();
+                    
+                    this.showHandSign(type); // Show specific shadow hands
+                    this.createShikigami(type);
+                    
+                    const card = this.dom.cards[type-1];
+                    card.classList.add('active');
+                    setTimeout(() => card.classList.remove('active'), 100);
+                }
+            },
+
+            createShikigami(type) {
+                const el = document.createElement('div');
+                el.classList.add('shikigami');
+                
+                let stats = {};
+                
+                if(type === 1) { // DOG: BALANCED
+                    el.classList.add('dog');
+                    el.style.left = '100px'; 
+                    el.style.top = (this.mouseY - 25) + 'px'; 
+                    // HP: 20 (dies in 2 hits), DMG: 25 (decent bite)
+                    stats = { type: 1, hp: 20, dmg: 25, speed: 6, el: el };
+                    
+                } else if(type === 2) { // NUE: BUFFED
+                    el.classList.add('nue');
+                    el.style.left = '100px'; 
+                    el.style.top = (this.mouseY - 30) + 'px'; 
+                    // HP: 10 (very weak body), DMG: 30 (Lightning hurts more now)
+                    stats = { type: 2, hp: 10, dmg: 30, speed: 8, el: el, shooter: true };
+                    
+                } else if(type === 3) { // ELEPHANT: TANK
+                    el.classList.add('elephant');
+                    el.style.left = '100px'; 
+                    el.style.top = (this.mouseY - 50) + 'px'; 
+                    // HP: 200 (Lasts a long time), DMG: 15 (Crushes them)
+                    stats = { type: 3, hp: 200, dmg: 15, speed: 2, el: el, heavy: true }; 
+                }
+
+                this.dom.stage.appendChild(el);
+                this.entities.push(stats);
+            },
+
+            activateMahoraga() {
+                this.mahoragaCharge = 0;
+                AudioFX.raga();
+                
+                const wheel = document.getElementById('mahoraga-wheel');
+                const sprite = this.dom.mahoragaSprite;
+
+                // SHOW EFFECTS
+                wheel.style.display = 'block';
+                wheel.classList.add('spin');
+                sprite.style.opacity = 1; // Show Big Mahoraga
+                
+                const text = document.createElement('div');
+                text.innerText = "ADAPTING...";
+                text.style.position = 'absolute'; text.style.top = '160px'; text.style.left = '50%'; 
+                text.style.transform = 'translateX(-50%)'; text.style.color = 'var(--mahoraga-gold)'; text.style.zIndex = 55;
+                this.dom.stage.appendChild(text);
+
+                setTimeout(() => {
+                    wheel.style.display = 'none';
+                    wheel.classList.remove('spin');
+                    sprite.style.opacity = 0; // Hide Big Mahoraga
+                    text.remove();
+                    
+                    document.getElementById('slash-fx').classList.add('flash');
+                    setTimeout(() => document.getElementById('slash-fx').classList.remove('flash'), 200);
+                    
+                    this.enemies.forEach(e => {
+                        this.showDmg(e.x, e.y, "ADAPTED");
+                        e.el.remove();
+                    });
+                    this.score += this.enemies.length * 10;
+                    this.enemies = [];
+                }, 1500);
+            },
+
+            spawnEnemy() {
+                if(!this.active) return;
+                const el = document.createElement('div');
+                el.classList.add('enemy');
+                
+                const y = 50 + Math.random() * 500;
+                el.style.left = '900px'; el.style.top = y + 'px';
+                
+                const hp = 30 + (this.wave * 10);
+                
+                this.dom.stage.appendChild(el);
+                this.enemies.push({ el, x: 900, y, hp, maxHp: hp, speed: 2 + (this.wave * 0.2) });
+            },
+
+            loop() {
+                if(!this.active) return;
+
+                // Energy
+                if(this.keys[' ']) this.energy += 0.8; 
+                else this.energy += 0.15; 
+                this.energy = Math.min(this.energy, this.maxEnergy);
+
+                // Mahoraga Charge
+                if(this.mahoragaCharge < 100) this.mahoragaCharge += 0.05;
+
+                // Entities
+                for(let i = this.entities.length - 1; i >= 0; i--) {
+                    let s = this.entities[i];
+                    s.el.style.left = (parseInt(s.el.style.left) + s.speed) + 'px';
+                    
+                    // NUE Lightning
+                    if(s.type === 2 && Math.random() > 0.95) {
+                        AudioFX.zap();
+                        this.enemies.forEach(e => {
+                            if(e.x < 850 && e.x > parseInt(s.el.style.left)) {
+                                let eY = parseInt(e.el.style.top);
+                                let sY = parseInt(s.el.style.top);
+                                if(Math.abs(eY - sY) < 100) {
+                                    e.hp -= s.dmg;
+                                    e.x += 10;
+                                    this.showDmg(e.x, e.y, "⚡");
+                                }
+                            }
+                        });
+                    }
+
+                    // Collision Logic
+                    let hit = false;
+                    for(let j = this.enemies.length - 1; j >= 0; j--) {
+                        let e = this.enemies[j];
+                        
+                        if(this.checkCol(s.el, e.el)) {
+                            // Deal damage to enemy
+                            e.hp -= s.dmg;
+                            this.showDmg(e.x, e.y, s.dmg);
+
+                            // RECOIL DAMAGE LOGIC
+                            if(s.heavy) {
+                                // Elephant only takes 2 damage when hitting enemies (It's a tank!)
+                                s.hp -= 2; 
+                                e.x += 20; // Pushes enemy back
+                            } else {
+                                // Dog/Nue take 10 damage (They get hurt easily)
+                                s.hp -= 10; 
+                                e.x += 5;
+                            }
+
+                            // If Shikigami dies
+                            if(s.hp <= 0) {
+                                s.el.remove();
+                                this.entities.splice(i, 1);
+                                hit = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(hit) continue;
+
+                    if(parseInt(s.el.style.left) > 900) {
+                        s.el.remove();
+                        this.entities.splice(i, 1);
+                    }
+                }
+
+                // Enemies
+                for(let i = this.enemies.length - 1; i >= 0; i--) {
+                    let e = this.enemies[i];
+                    e.x -= e.speed;
+                    e.el.style.left = e.x + 'px';
+
+                    if(e.hp <= 0) {
+                        this.showDmg(e.x, e.y, "EXORCISED");
+                        e.el.remove();
+                        this.enemies.splice(i, 1);
+                        this.score += 10;
+                        if(this.score % 100 === 0) this.wave++;
+                    }
+
+                    if(e.x < 50) {
+                        this.gameOver();
+                    }
+                }
+
+                this.updateUI();
+                requestAnimationFrame(() => this.loop());
+            },
+
+            updateUI() {
+                this.dom.energy.style.width = this.energy + '%';
+                this.dom.score.innerText = this.score;
+                this.dom.wave.innerText = this.wave;
+
+                this.dom.cards[0].classList.toggle('affordable', this.energy >= 30);
+                this.dom.cards[1].classList.toggle('affordable', this.energy >= 50);
+                this.dom.cards[2].classList.toggle('affordable', this.energy >= 80);
+                
+                if(this.mahoragaCharge >= 100) {
+                    this.dom.cards[3].style.borderColor = 'white';
+                    this.dom.cards[3].style.boxShadow = '0 0 15px gold';
+                    this.dom.cards[3].style.cursor = 'pointer';
+                    this.dom.cards[3].querySelector('.card-cost').innerText = "READY";
+                } else {
+                    this.dom.cards[3].style.borderColor = '#555';
+                    this.dom.cards[3].style.boxShadow = 'none';
+                    this.dom.cards[3].querySelector('.card-cost').innerText = Math.floor(this.mahoragaCharge) + "%";
+                }
+            },
+
+            checkCol(a, b) {
+                const r1 = a.getBoundingClientRect();
+                const r2 = b.getBoundingClientRect();
+                return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
+            },
+
+            showDmg(x, y, txt) {
+                const el = document.createElement('div');
+                el.className = 'dmg-text';
+                el.style.left = x + 'px'; el.style.top = y + 'px';
+                el.innerText = txt;
+                this.dom.stage.appendChild(el);
+                setTimeout(() => el.remove(), 500);
+            },
+
+            gameOver() {
+                this.active = false;
+                this.dom.aimLine.style.display = 'none';
+                clearInterval(this.spawnLoop);
+                document.getElementById('final-score').innerText = this.score;
+                document.getElementById('game-over').classList.remove('hidden');
+            }
+        };
+
+        Game.init();
+    </script>
+</body>
+</html>

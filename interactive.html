@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUJUTSU DEFENSE: LIMITLESS ENGINE</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --c-blue: #00aaff;
+            --c-red: #ff0044;
+            --c-purple: #9d00ff;
+            --c-void: #ffffff;
+            --c-curse: #2a2a2a;
+            --c-gold: #ffcc00;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: 'Segoe UI', Impact, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* LAYERS */
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #ctx-bg { z-index: 1; opacity: 0.2; } /* Grid */
+        #ctx-main { z-index: 2; } /* Game */
+        #ctx-fx { z-index: 3; mix-blend-mode: screen; } /* Glows */
+        #ctx-ui { z-index: 4; } /* Text numbers */
+
+        /* HUD INTERFACE */
+        #hud-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .top-bar {
+            width: 100%;
+            padding-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3rem;
+            letter-spacing: 12px;
+            color: var(--c-gold);
+            text-shadow: 0 0 30px rgba(255, 204, 0, 0.5);
+            margin: 0;
+        }
+
+        .health-wrapper {
+            width: 600px;
+            height: 16px;
+            background: #111;
+            border: 2px solid #333;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        #health-fill {
+            width: 100%;
+            height: 100%;
+            background: #00ff99;
+            box-shadow: 0 0 20px #00ff99;
+            transition: width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* BOTTOM SKILL BAR */
+        .bottom-bar {
+            width: 100%;
+            padding-bottom: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding-top: 100px;
+        }
+
+        .skill-node {
+            width: 90px;
+            height: 100px;
+            background: rgba(10,10,10,0.85);
+            border: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            position: relative;
+            transition: transform 0.1s;
+        }
+
+        .skill-node b { font-size: 14px; margin-bottom: 5px; color: #fff; }
+        .skill-node span { font-size: 10px; color: #777; font-weight: bold; }
+        
+        .skill-node.ready { border-color: var(--c-blue); box-shadow: 0 0 15px rgba(0,170,255,0.1); }
+        .skill-node.cooldown { border-color: #ff3333; opacity: 0.4; }
+
+        /* METERS */
+        .meter-group {
+            display: flex;
+            gap: 15px;
+            margin: 0 40px;
+        }
+
+        .energy-bar {
+            width: 50px;
+            height: 160px;
+            background: #000;
+            border: 2px solid #333;
+            display: flex;
+            align-items: flex-end;
+            position: relative;
+            border-radius: 4px;
+        }
+
+        #purple-fill {
+            width: 100%;
+            height: 0%;
+            background: var(--c-purple);
+            box-shadow: 0 0 30px var(--c-purple);
+            transition: height 0.1s linear;
+        }
+
+        /* OVERLAYS */
+        #msg-center {
+            position: fixed;
+            top: 45%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #msg-main {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #fff;
+            display: none;
+            text-shadow: 0 0 40px currentColor;
+        }
+
+        #charge-indicator {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0px; height: 0px;
+            border-radius: 50%;
+            border: 2px solid var(--c-purple);
+            box-shadow: 0 0 50px var(--c-purple);
+            display: none;
+            z-index: 50;
+            opacity: 0;
+        }
+
+        /* SIDE PANEL */
+        .control-panel {
+            position: fixed;
+            top: 150px; right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        .btn {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 15px 25px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        .btn:hover { background: #fff; color: #000; }
+        .btn-gold { border-color: var(--c-gold); color: var(--c-gold); }
+
+        /* ANIMATIONS */
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        .shaking { animation: shake 0.5s; animation-iteration-count: infinite; }
+    </style>
+</head>
+<body>
+
+   <a href="index.html?nointro=1" class="home-btn">
+    🏠 Go Home
+</a>
+
+<style>
+    .home-btn {
+        /* Positioning */
+        position: fixed;      /* Keeps it stuck to the screen */
+        top: 20px;            /* Distance from top */
+        left: 20px;           /* Distance from left */
+        z-index: 1000;        /* Ensures it sits ON TOP of your game canvas */
+        
+        /* Styling */
+        background-color: #333; /* Dark background */
+        color: white;           /* White text */
+        padding: 10px 20px;     /* Size of the button */
+        font-family: sans-serif;
+        font-weight: bold;
+        text-decoration: none;  /* Removes the underline from the link */
+        border: 2px solid #555;
+        border-radius: 8px;     /* Rounded corners */
+        box-shadow: 0 4px 0 #000; /* Retro "3D" shadow effect */
+        transition: all 0.1s;
+        cursor: pointer;
+    }
+
+    /* Hover Effect */
+    .home-btn:hover {
+        background-color: #555;
+        transform: translateY(-2px); /* Moves up slightly */
+    }
+
+    /* Click Effect */
+    .home-btn:active {
+        transform: translateY(2px); /* Pushes down */
+        box-shadow: 0 0 0 #000;     /* Shadow disappears */
+    }
+</style>
+
+    <div id="game-container">
+        <canvas id="ctx-bg"></canvas>
+        <canvas id="ctx-main"></canvas>
+        <canvas id="ctx-fx"></canvas>
+        <canvas id="ctx-ui"></canvas>
+    </div>
+
+    <div id="charge-indicator"></div>
+
+    <div id="hud-layer">
+        <div class="top-bar">
+            <h1 id="wave-text">PRACTICE</h1>
+            <div class="health-wrapper">
+                <div id="health-fill"></div>
+            </div>
+            <div style="font-size: 10px; margin-top:5px; color:#666; letter-spacing: 2px;">BARRIER STABILITY</div>
+        </div>
+
+        <div id="msg-center">
+            <div id="msg-main">DOMAIN EXPANSION</div>
+            <div id="msg-sub" style="font-size: 1.5rem; color: #aaa; margin-top: 10px;"></div>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="skill-node ready" id="skill-m1">
+                <b>STRIKE</b>
+                <span>L-CLICK</span>
+            </div>
+            <div class="skill-node ready" id="skill-l">
+                <b style="color:var(--c-blue)">BLUE</b>
+                <span>[L] KEY</span>
+            </div>
+            <div class="skill-node ready" id="skill-r">
+                <b style="color:var(--c-red)">RED</b>
+                <span>[R] KEY</span>
+            </div>
+
+            <div class="meter-group">
+                <div class="energy-bar">
+                    <div id="purple-fill"></div>
+                    <div style="position: absolute; width:100%; text-align:center; bottom: 5px; font-size:10px; font-weight:bold; text-shadow:0 0 5px #000;">100%</div>
+                </div>
+            </div>
+
+            <div class="skill-node ready" id="skill-f">
+                <b style="color:var(--c-blue)">BOLT</b>
+                <span>[F] KEY</span>
+            </div>
+            <div class="skill-node ready" id="skill-b">
+                <b style="color:var(--c-red)">FLASH</b>
+                <span>[B] KEY</span>
+            </div>
+            <div class="skill-node ready" id="skill-h">
+                <b style="color:var(--c-purple)">HOLLOW</b>
+                <span>HOLD [H]</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <button class="btn btn-gold" id="btn-mode" onclick="Engine.toggleMode()">MODE: PRACTICE</button>
+        <button class="btn" onclick="Engine.spawnWave(30)">SPAWN CURSES [Z]</button>
+        <button class="btn" onclick="location.reload()">SYSTEM RESET</button>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const CONFIG = {
+            maxHp: 50000,
+            cooldowns: {
+                m1: 500,
+                l: 2500,
+                r: 6000,
+                f: 900,
+                b: 15000,
+                h: 5000
+            },
+            colors: {
+                blue: '#00aaff',
+                red: '#ff0044',
+                purple: '#9d00ff',
+                white: '#ffffff'
+            }
+        };
+
+        // --- GLOBAL STATE ---
+        const State = {
+            mode: 'practice', // 'practice' or 'defense'
+            hp: CONFIG.maxHp,
+            wave: 1,
+            energy: 100, // 0 to 100
+            isDead: false,
+            lastUsed: { m1:0, l:0, r:0, f:0, b:0, h:0 },
+            
+            // Purple Charging Logic
+            charging: false,
+            chargeStart: 0,
+            
+            // Screen Shake
+            shakeIntensity: 0
+        };
+
+        // --- ENGINE CONTROLLER ---
+        const Engine = {
+            w: 0, h: 0,
+            mouse: { x: 0, y: 0 },
+            ctxBg: null, ctxMain: null, ctxFx: null, ctxUi: null,
+            
+            entities: {
+                enemies: [],
+                projectiles: [],
+                particles: [],
+                texts: [] // Floating damage numbers
+            },
+
+            init() {
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                
+                this.ctxBg = document.getElementById('ctx-bg').getContext('2d');
+                this.ctxMain = document.getElementById('ctx-main').getContext('2d');
+                this.ctxFx = document.getElementById('ctx-fx').getContext('2d');
+                this.ctxUi = document.getElementById('ctx-ui').getContext('2d');
+
+                this.setupInputs();
+                this.loop();
+                this.drawGrid();
+            },
+
+            resize() {
+                this.w = window.innerWidth;
+                this.h = window.innerHeight;
+                ['ctx-bg', 'ctx-main', 'ctx-fx', 'ctx-ui'].forEach(id => {
+                    const c = document.getElementById(id);
+                    c.width = this.w; c.height = this.h;
+                });
+                this.drawGrid();
+            },
+
+            toggleMode() {
+                State.mode = (State.mode === 'practice') ? 'defense' : 'practice';
+                const btn = document.getElementById('btn-mode');
+                const txt = document.getElementById('wave-text');
+                
+                if(State.mode === 'defense') {
+                    btn.innerText = "MODE: SURVIVAL";
+                    txt.innerText = "WAVE 1";
+                    State.energy = 0;
+                    State.hp = CONFIG.maxHp;
+                    State.wave = 1;
+                    this.entities.enemies = [];
+                    this.spawnWave(40);
+                } else {
+                    btn.innerText = "MODE: PRACTICE";
+                    txt.innerText = "PRACTICE";
+                    State.energy = 100;
+                    State.hp = CONFIG.maxHp;
+                    this.entities.enemies = [];
+                }
+            },
+
+            spawnWave(count) {
+                const scalar = 1 + (State.wave * 0.5);
+                for(let i=0; i<count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.max(this.w, this.h) * 0.65;
+                    this.entities.enemies.push(new Enemy(
+                        this.w/2 + Math.cos(angle)*radius,
+                        this.w/2 + Math.sin(angle)*radius,
+                        3200 * scalar // HP
+                    ));
+                }
+            },
+
+            addText(x, y, txt, color) {
+                this.entities.texts.push(new FloatingText(x, y, txt, color));
+            },
+
+            drawGrid() {
+                if(!this.ctxBg) return;
+                const c = this.ctxBg;
+                c.clearRect(0,0,this.w,this.h);
+                c.strokeStyle = '#222';
+                c.lineWidth = 1;
+                c.beginPath();
+                for(let x=0; x<this.w; x+=80) { c.moveTo(x,0); c.lineTo(x,this.h); }
+                for(let y=0; y<this.h; y+=80) { c.moveTo(0,y); c.lineTo(this.w,y); }
+                c.stroke();
+            },
+
+            setupInputs() {
+                window.onmousemove = e => { this.mouse.x = e.clientX; this.mouse.y = e.clientY; };
+                
+                window.onmousedown = e => {
+                    if(State.isDead) return;
+                    if(e.button === 0) Abilities.use('m1');
+                };
+
+                window.onkeydown = e => {
+                    if(State.isDead) return;
+                    if(e.repeat) return; // Prevent hold spam
+                    
+                    const k = e.code;
+                    if(k === 'KeyL') Abilities.use('l');
+                    if(k === 'KeyR') Abilities.use('r');
+                    if(k === 'KeyF') Abilities.use('f');
+                    if(k === 'KeyB') Abilities.use('b');
+                    if(k === 'KeyH') Abilities.startChargeH();
+                    if(k === 'KeyZ') this.spawnWave(30);
+                };
+
+                window.onkeyup = e => {
+                    if(e.code === 'KeyH') Abilities.releaseH();
+                };
+                
+                window.oncontextmenu = e => e.preventDefault();
+            },
+
+            loop() {
+                requestAnimationFrame(() => this.loop());
+
+                // 1. Clear Screens
+                this.ctxMain.clearRect(0,0,this.w,this.h);
+                this.ctxFx.clearRect(0,0,this.w,this.h);
+                this.ctxUi.clearRect(0,0,this.w,this.h);
+
+                // 2. Shake Logic
+                const shakeX = (Math.random()-0.5) * State.shakeIntensity;
+                const shakeY = (Math.random()-0.5) * State.shakeIntensity;
+                State.shakeIntensity *= 0.92; // Decay shake
+
+                this.ctxMain.save();
+                this.ctxMain.translate(shakeX, shakeY);
+                this.ctxFx.save();
+                this.ctxFx.translate(shakeX, shakeY);
+
+                // 3. Draw Barrier
+                this.ctxMain.beginPath();
+                this.ctxMain.strokeStyle = '#00ff99';
+                this.ctxMain.lineWidth = 5;
+                this.ctxMain.shadowBlur = 20;
+                this.ctxMain.shadowColor = '#00ff99';
+                this.ctxMain.arc(this.w/2, this.h/2, 100, 0, Math.PI*2);
+                this.ctxMain.stroke();
+                this.ctxMain.shadowBlur = 0; // Reset
+
+                // 4. Update & Draw Entities
+                this.updateEnemies();
+                this.updateProjectiles();
+                this.updateParticles();
+                this.updateTexts();
+
+                // 5. Charging Logic (Visuals)
+                if(State.charging) {
+                    const elapsed = Date.now() - State.chargeStart;
+                    const progress = Math.min(elapsed / 2000, 1); // 2s charge
+                    
+                    // Draw charge lines to mouse
+                    const cx = this.w/2; const cy = this.h/2;
+                    this.ctxFx.strokeStyle = CONFIG.colors.purple;
+                    this.ctxFx.lineWidth = 2;
+                    for(let i=0; i<4; i++) {
+                        this.ctxFx.beginPath();
+                        this.ctxFx.moveTo(cx + (Math.random()-0.5)*100, cy + (Math.random()-0.5)*100);
+                        this.ctxFx.lineTo(cx, cy);
+                        this.ctxFx.stroke();
+                    }
+
+                    // Charge Overlay
+                    const ind = document.getElementById('charge-indicator');
+                    ind.style.display = 'block';
+                    ind.style.width = (progress * 300) + 'px';
+                    ind.style.height = (progress * 300) + 'px';
+                    ind.style.opacity = progress;
+                    
+                    State.shakeIntensity += 0.5; // Build shake while holding
+                } else {
+                    document.getElementById('charge-indicator').style.display = 'none';
+                }
+
+                this.ctxMain.restore();
+                this.ctxFx.restore();
+
+                // 6. UI Updates
+                this.updateUI();
+            },
+
+            updateEnemies() {
+                if(State.mode === 'defense' && this.entities.enemies.length === 0) {
+                    State.wave++;
+                    document.getElementById('wave-text').innerText = "WAVE " + State.wave;
+                    this.spawnWave(40 + (State.wave*10));
+                }
+
+                for(let i = this.entities.enemies.length-1; i>=0; i--) {
+                    let e = this.entities.enemies[i];
+                    
+                    // Move
+                    let dx = (this.w/2) - e.x;
+                    let dy = (this.h/2) - e.y;
+                    let dist = Math.hypot(dx, dy);
+                    
+                    if(dist < 110) {
+                        // Hit Barrier
+                        if(State.mode === 'defense') State.hp -= 2500;
+                        State.shakeIntensity = 20;
+                        this.entities.enemies.splice(i, 1);
+                        continue;
+                    }
+
+                    e.vx += (dx/dist) * 0.2;
+                    e.vy += (dy/dist) * 0.2;
+                    e.vx *= 0.94; e.vy *= 0.94;
+                    e.x += e.vx; e.y += e.vy;
+
+                    // Draw
+                    const ctx = this.ctxMain;
+                    ctx.fillStyle = '#000';
+                    ctx.strokeStyle = e.hp < 1000 ? '#fff' : CONFIG.colors.red;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(e.x, e.y, 22, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    if(e.hp <= 0) {
+                        // Death
+                        FX.burst(e.x, e.y, CONFIG.colors.red, 10);
+                        if(State.mode !== 'practice') State.energy = Math.min(100, State.energy + 0.08); // Tiny gain
+                        this.entities.enemies.splice(i, 1);
+                    }
+                }
+
+                if(State.hp <= 0 && !State.isDead) {
+                    State.hp = 0;
+                    State.isDead = true;
+                    Abilities.announce("BARRIER DESTROYED", "red");
+                }
+            },
+
+            updateProjectiles() {
+                for(let i = this.entities.projectiles.length-1; i>=0; i--) {
+                    let p = this.entities.projectiles[i];
+                    p.update();
+                    p.draw(this.ctxFx);
+                    if(p.dead) this.entities.projectiles.splice(i, 1);
+                }
+            },
+
+            updateParticles() {
+                for(let i = this.entities.particles.length-1; i>=0; i--) {
+                    let p = this.entities.particles[i];
+                    p.life -= 0.02;
+                    p.x += p.vx; p.y += p.vy;
+                    
+                    this.ctxFx.globalAlpha = p.life;
+                    this.ctxFx.fillStyle = p.color;
+                    this.ctxFx.fillRect(p.x, p.y, p.size, p.size);
+                    
+                    if(p.life <= 0) this.entities.particles.splice(i, 1);
+                }
+                this.ctxFx.globalAlpha = 1;
+            },
+
+            updateTexts() {
+                const ctx = this.ctxUi;
+                ctx.font = "bold 20px Arial";
+                ctx.textAlign = "center";
+                for(let i = this.entities.texts.length-1; i>=0; i--) {
+                    let t = this.entities.texts[i];
+                    t.y -= 1; t.life -= 0.02;
+                    ctx.fillStyle = t.color;
+                    ctx.globalAlpha = Math.max(0, t.life);
+                    ctx.fillText(t.val, t.x, t.y);
+                    if(t.life <= 0) this.entities.texts.splice(i, 1);
+                }
+                ctx.globalAlpha = 1;
+            },
+
+            updateUI() {
+                // HP
+                const hpPct = (State.hp / CONFIG.maxHp) * 100;
+                document.getElementById('health-fill').style.width = hpPct + "%";
+                
+                // Energy
+                document.getElementById('purple-fill').style.height = State.energy + "%";
+
+                // Cooldowns
+                const now = Date.now();
+                const map = { 'm1':'m1', 'l':'l', 'r':'r', 'f':'f', 'b':'b', 'h':'h' };
+                for(let key in map) {
+                    const el = document.getElementById('skill-' + key);
+                    const cdTime = CONFIG.cooldowns[key];
+                    if(State.mode === 'defense' && (now - State.lastUsed[key] < cdTime)) {
+                        el.classList.add('cooldown');
+                        el.classList.remove('ready');
+                    } else {
+                        el.classList.remove('cooldown');
+                        el.classList.add('ready');
+                    }
+                }
+            }
+        };
+
+        // --- CLASSES ---
+        class Enemy {
+            constructor(x, y, hp) {
+                this.x = x; this.y = y;
+                this.vx = 0; this.vy = 0;
+                this.hp = hp;
+            }
+        }
+
+        class Projectile {
+            constructor(type, x, y, vx, vy) {
+                this.type = type;
+                this.x = x; this.y = y;
+                this.vx = vx; this.vy = vy;
+                this.dead = false;
+                
+                // Stats based on type
+                if(type === 'bolt') {
+                    this.size = 6; this.color = CONFIG.colors.blue; this.dmg = 1400; this.life = 100;
+                } else if (type === 'purple') {
+                    this.size = 180; this.color = CONFIG.colors.purple; this.dmg = 999999; this.life = 600;
+                }
+            }
+
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.life--;
+
+                // Hit Detection
+                Engine.entities.enemies.forEach(e => {
+                    const dist = Math.hypot(this.x - e.x, this.y - e.y);
+                    if(dist < this.size + 20) {
+                        e.hp -= this.dmg;
+                        if(this.type === 'bolt') {
+                            this.dead = true;
+                            Engine.addText(e.x, e.y, Math.floor(this.dmg), this.color);
+                            FX.burst(e.x, e.y, this.color, 3);
+                            if(State.mode !== 'practice') State.energy = Math.min(100, State.energy + 0.02);
+                        } else {
+                            // Purple hits constantly but creates text occasionally to save performance
+                            if(this.life % 10 === 0) Engine.addText(e.x, e.y, "CRITICAL", "#fff");
+                        }
+                    }
+                });
+
+                if(this.life <= 0 || this.x < -200 || this.x > Engine.w+200) this.dead = true;
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = this.size * 2;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class FloatingText {
+            constructor(x, y, val, color) {
+                this.x = x; this.y = y; this.val = val; this.color = color;
+                this.life = 1.0;
+            }
+        }
+
+        // --- EFFECTS SYSTEM ---
+        const FX = {
+            burst(x, y, color, count) {
+                for(let i=0; i<count; i++) {
+                    Engine.entities.particles.push({
+                        x: x, y: y,
+                        vx: (Math.random()-0.5)*20,
+                        vy: (Math.random()-0.5)*20,
+                        life: 1.0,
+                        color: color,
+                        size: Math.random()*4 + 2
+                    });
+                }
+            }
+        };
+
+        // --- ABILITIES SYSTEM ---
+        const Abilities = {
+            canUse(key) {
+                if(State.mode === 'practice') return true;
+                const now = Date.now();
+                if(now - State.lastUsed[key] > CONFIG.cooldowns[key]) {
+                    State.lastUsed[key] = now;
+                    return true;
+                }
+                return false;
+            },
+
+            use(key) {
+                if(!this.canUse(key)) return;
+                
+                const mx = Engine.mouse.x;
+                const my = Engine.mouse.y;
+
+                if(key === 'm1') { // Strike
+                    FX.burst(mx, my, '#fff', 12);
+                    Engine.entities.enemies.forEach(e => {
+                        let d = Math.hypot(mx - e.x, my - e.y);
+                        if(d < 180) {
+                            e.hp -= 850;
+                            // Knockback
+                            let ang = Math.atan2(e.y - my, e.x - mx);
+                            e.vx += Math.cos(ang) * 30;
+                            e.vy += Math.sin(ang) * 30;
+                            Engine.addText(e.x, e.y, "850", "#fff");
+                            if(State.mode !== 'practice') State.energy = Math.min(100, State.energy + 0.005);
+                        }
+                    });
+                }
+                
+                if(key === 'l') { // Blue
+                    FX.burst(mx, my, CONFIG.colors.blue, 20);
+                    Engine.entities.enemies.forEach(e => {
+                        let d = Math.hypot(mx - e.x, my - e.y);
+                        if(d < 500) {
+                            let ang = Math.atan2(my - e.y, mx - e.x);
+                            e.vx += Math.cos(ang) * 20; e.vy += Math.sin(ang) * 20;
+                        }
+                    });
+                }
+
+                if(key === 'r') { // Red
+                    State.shakeIntensity = 25;
+                    FX.burst(mx, my, CONFIG.colors.red, 30);
+                    Engine.entities.enemies.forEach(e => {
+                        let d = Math.hypot(mx - e.x, my - e.y);
+                        if(d < 400) {
+                            e.hp -= 4000;
+                            let ang = Math.atan2(e.y - my, e.x - mx);
+                            e.vx += Math.cos(ang) * 50; e.vy += Math.sin(ang) * 50;
+                            Engine.addText(e.x, e.y, "4000", CONFIG.colors.red);
+                        }
+                    });
+                }
+
+                if(key === 'f') { // Bolt
+                    let ang = Math.atan2(my - Engine.h, mx - Engine.w/2);
+                    Engine.entities.projectiles.push(new Projectile(
+                        'bolt', Engine.w/2, Engine.h, 
+                        Math.cos(ang)*40, Math.sin(ang)*40
+                    ));
+                }
+
+                if(key === 'b') { // Black Flash
+                    State.shakeIntensity = 60;
+                    this.announce("BLACK FLASH", "#ff0000");
+                    document.body.style.filter = "invert(1)";
+                    setTimeout(() => document.body.style.filter = "invert(0)", 150);
+                    
+                    Engine.entities.enemies.forEach(e => {
+                        let d = Math.hypot(mx - e.x, my - e.y);
+                        if(d < 350) {
+                            e.hp -= 22000;
+                            Engine.addText(e.x, e.y, "22000!", "#000");
+                            // Ultra Knockback
+                            let ang = Math.atan2(e.y - my, e.x - mx);
+                            e.vx += Math.cos(ang) * 80; e.vy += Math.sin(ang) * 80;
+                            if(State.mode !== 'practice') State.energy = Math.min(100, State.energy + 2.0);
+                        }
+                    });
+                }
+            },
+
+            // --- HOLLOW PURPLE MECHANIC ---
+            startChargeH() {
+                if(State.mode !== 'practice' && State.energy < 100) {
+                    this.announce("INSUFFICIENT ENERGY", "#555");
+                    return;
+                }
+                State.charging = true;
+                State.chargeStart = Date.now();
+            },
+
+            releaseH() {
+                if(!State.charging) return;
+                
+                const chargeDuration = Date.now() - State.chargeStart;
+                State.charging = false;
+
+                if(chargeDuration >= 2000) { // SUCCESS
+                    // Reset Energy
+                    if(State.mode !== 'practice') State.energy = 0;
+                    
+                    // Fire
+                    State.shakeIntensity = 100;
+                    this.announce("HOLLOW PURPLE", CONFIG.colors.purple);
+                    
+                    let ang = Math.atan2(Engine.mouse.y - Engine.h/2, Engine.mouse.x - Engine.w/2);
+                    Engine.entities.projectiles.push(new Projectile(
+                        'purple', Engine.w/2, Engine.h/2,
+                        Math.cos(ang)*12, Math.sin(ang)*12
+                    ));
+
+                } else { // FAIL
+                    this.announce("FIZZLED...", "#888");
+                }
+            },
+
+            announce(text, color) {
+                const el = document.getElementById('msg-main');
+                const box = document.getElementById('msg-center');
+                el.innerText = text;
+                el.style.color = color;
+                el.style.display = 'block';
+                el.style.textShadow = `0 0 50px ${color}`;
+                setTimeout(() => el.style.display = 'none', 2000);
+            }
+        };
+
+        // --- BOOTSTRAP ---
+        Engine.init();
+
+    </script>
+</body>
+</html>

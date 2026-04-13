@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE PEAK - Choose Your Domain</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* --- BASE STYLES --- */
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: #050505;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- HEADER & BACK BUTTON --- */
+        .back-link {
+            position: absolute;
+            top: 30px; left: 30px;
+            color: #555;
+            text-decoration: none;
+            letter-spacing: 2px;
+            font-size: 12px;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .back-link:hover { color: white; }
+
+        h1 {
+            font-size: 2.5rem;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            margin-bottom: 50px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            z-index: 2;
+        }
+
+        /* --- FIGHT CARDS CONTAINER --- */
+        .cards-container {
+            display: flex;
+            gap: 40px;
+            width: 80%;
+            max-width: 1000px;
+            z-index: 2;
+        }
+
+        /* Base Card Styling */
+        .fight-card {
+            flex: 1;
+            height: 400px;
+            background: #111;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+            text-decoration: none; /* For the <a> tag */
+            color: white;
+        }
+
+        .fight-card h2 {
+            font-size: 1.8rem;
+            letter-spacing: 3px;
+            z-index: 2;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .fight-card p {
+            color: #aaa;
+            letter-spacing: 5px;
+            z-index: 2;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        /* --- CARD 1: GOJO (Blue & Red Vibe) --- */
+        #card-gojo:hover {
+            border-color: #00d2ff;
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.4);
+            transform: translateY(-10px);
+        }
+        #card-gojo::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, rgba(0,210,255,0.1), rgba(255,0,76,0.1));
+            z-index: 1; transition: 0.4s; opacity: 0;
+        }
+        #card-gojo:hover::before { opacity: 1; }
+
+        /* --- CARD 2: HAKARI (Gold & Purple Vibe) --- */
+        #card-hakari:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+            transform: translateY(-10px);
+        }
+        #card-hakari::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(45deg, rgba(255,215,0,0.1), rgba(138,43,226,0.1));
+            z-index: 1; transition: 0.4s; opacity: 0;
+        }
+        #card-hakari:hover::before { opacity: 1; }
+
+        /* Subtle Background Glow for the whole page */
+        .ambient-glow {
+            position: absolute; top: 50%; left: 50%; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+            transform: translate(-50%, -50%); pointer-events: none; z-index: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+
+    <a href="index.html?nointro=1" class="back-link">← RETURN TO VOID</a>
+    
+    <h1>Choose Your Domain</h1>
+
+    <div class="cards-container">
+        <a href="peak.html" class="fight-card" id="card-gojo">
+            <h2>THE HONORED</h2>
+            <p>Gojo vs Sukuna</p>
+        </a>
+
+         <a href="peak1(update).html" class="fight-card" id="card-gojo">
+            <h2>THE HONORED(2nd version)</h2>
+            <p>Gojo vs Sukuna</p>
+        </a>
+
+        <a href="peak2.html" class="fight-card" id="card-hakari">
+            <h2>THE GAMBLER</h2>
+            <p>Hakari vs Kashimo</p>
+        </a>
+    </div>
+
+</body>
+</html>

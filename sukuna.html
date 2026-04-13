@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJK ARCADE: MALEVOLENT KITCHEN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            background: #050000;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            cursor: none;
+            user-select: none;
+        }
+
+        /* --- THE GLITCH EFFECT --- */
+        @keyframes glitch-anim {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+
+        .glitch-active {
+            animation: glitch-anim 0.2s infinite;
+            filter: drop-shadow(-2px 0 red) drop-shadow(2px 0 cyan);
+        }
+
+        /* --- UI --- */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        h1 {
+            position: absolute; top: 20px; width: 100%; text-align: center;
+            color: #ff0044; font-family: 'Creepster', cursive; font-size: 5rem;
+            margin: 0; text-shadow: 0 0 30px #ff0000;
+            opacity: 0.9;
+            letter-spacing: 5px;
+            /* Make the title pulse slightly */
+            animation: title-pulse 2s infinite alternate;
+        }
+
+        @keyframes title-pulse { from { transform: scale(1); opacity: 0.9; } to { transform: scale(1.02); opacity: 1; } }
+
+        #score-board {
+            position: absolute; top: 120px; width: 100%; text-align: center;
+            color: white; font-size: 1.5rem; text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            font-weight: bold; letter-spacing: 2px;
+        }
+
+        /* METER */
+        #fuga-container {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        #fuga-meter {
+            width: 400px; height: 25px; 
+            border: 3px solid #444; 
+            background: #111;
+            transform: skewX(-20deg);
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        #fuga-fill {
+            width: 0%; height: 100%; 
+            background: linear-gradient(90deg, #ff8800, #ff0000);
+            box-shadow: 0 0 40px #ff4400;
+            transition: width 0.05s linear;
+        }
+        
+        #fuga-text {
+            color: #ff8800; font-size: 1.2rem; margin-bottom: 10px;
+            font-weight: bold; letter-spacing: 3px;
+            text-shadow: 0 0 15px orange;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        #fuga-text.ready { opacity: 1; animation: textPulse 0.2s infinite alternate; }
+
+        @keyframes textPulse { from { transform: scale(1); text-shadow: 0 0 10px orange; } to { transform: scale(1.1); text-shadow: 0 0 25px red; } }
+
+        /* OVERLAYS */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; pointer-events: auto; cursor: default;
+            backdrop-filter: blur(8px);
+        }
+        .hidden { display: none !important; }
+
+        .btn {
+            background: transparent; color: #ff0044; border: 2px solid #ff0044;
+            padding: 20px 60px; font-size: 2rem; font-family: 'Orbitron';
+            cursor: pointer; margin-top: 40px; transition: 0.1s;
+            text-transform: uppercase; letter-spacing: 3px;
+            font-weight: bold;
+        }
+        .btn:hover { background: #ff0044; color: black; box-shadow: 0 0 60px #ff0044; transform: scale(1.05); }
+
+        /* FLASH */
+        #flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none; z-index: 100;
+            transition: opacity 0.1s; /* Faster flash */
+            mix-blend-mode: hard-light;
+        }
+        
+        /* DOMAIN BACKGROUND */
+        #bg-effect {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: radial-gradient(circle at center, #220000 0%, #000000 70%);
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        .back-home {
+            position: fixed; top: 20px; left: 20px; color: #555; text-decoration: none;
+            border: 1px solid #333; padding: 8px 15px; font-size: 0.8rem; z-index: 100;
+            background: rgba(0,0,0,0.5); pointer-events: auto; cursor: pointer;
+            font-family: sans-serif;
+        }
+        .back-home:hover { border-color: #ff0044; color: #ff0044; }
+
+    </style>
+</head>
+<body>
+
+    <a href="playground.html" class="back-home">⬅ BACK TO SELECT</a>
+    <div id="flash"></div>
+    <div id="bg-effect"></div>
+
+    <div id="ui-layer">
+        <h1>MALEVOLENT KITCHEN</h1>
+        <div id="score-board">INGREDIENTS COOKED: <span id="score">0</span></div>
+        
+        <div id="fuga-container">
+            <div id="fuga-text">[SPACE] OPEN FURNACE</div>
+            <div id="fuga-meter"><div id="fuga-fill"></div></div>
+        </div>
+    </div>
+
+    <div id="start-screen" class="overlay">
+        <h1 style="position:relative; font-size: 5rem; margin-bottom: 20px;">MALEVOLENT KITCHEN</h1>
+        <p style="color: #ccc; text-align: center; font-size: 1.2rem; line-height: 1.8;">
+            <span style="color:#ff0044; font-weight:bold;">SLICE</span> the ingredients.<br>
+            <span style="color:#9900cc; font-weight:bold;">TENDERIZE</span> the tough ones.<br>
+            <span style="color:orange; font-weight:bold;">[SPACE]</span> to Deep Fry.
+        </p>
+        <button class="btn" onclick="Game.start()">EXPAND DOMAIN</button>
+    </div>
+
+    <div id="game-over" class="overlay hidden">
+        <h1 style="position:relative; color: white;">KITCHEN CLOSED</h1>
+        <p style="color: #ff0044; font-size: 2rem;">SCORE: <span id="final-score">0</span></p>
+        <button class="btn" onclick="Game.start()">RECOOK</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // --- AUDIO ENGINE ---
+        const AudioFX = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            play(freq, type, dur, vol=0.1, slide=0) {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator(); 
+                const g = this.ctx.createGain();
+                o.type = type; 
+                o.frequency.value = freq;
+                
+                if(slide !== 0) {
+                    o.frequency.exponentialRampToValueAtTime(freq + slide, this.ctx.currentTime + dur);
+                }
+
+                g.gain.setValueAtTime(vol, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+                
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + dur);
+            },
+            slash() { 
+                // Higher pitched, sharper
+                this.play(800 + Math.random()*300, 'sawtooth', 0.1, 0.04, 600); 
+            },
+            hit() {
+                 this.play(150, 'square', 0.1, 0.08, -50);
+            },
+            die() { 
+                // Crunchy explosion
+                this.play(100, 'sawtooth', 0.15, 0.2, -80); 
+                this.play(60, 'square', 0.2, 0.15); 
+            },
+            tankHit() {
+                // Metallic thud
+                this.play(200, 'triangle', 0.1, 0.2, -100);
+            },
+            fuga() { 
+                // The Bass Drop
+                this.play(100, 'sawtooth', 1.5, 0.5, -90); 
+                this.play(40, 'sine', 3.0, 0.8, -10); 
+                // High pitch scream
+                this.play(800, 'triangle', 0.5, 0.1, -400);
+            }
+        };
+
+        // --- GAME ENGINE ---
+        const Game = {
+            active: false,
+            score: 0,
+            fugaMeter: 0,
+            
+            mouse: { x: 0, y: 0 },
+            lastMouse: { x: 0, y: 0 },
+            
+            slashPoints: [],
+            enemies: [],
+            particles: [],
+            floatingTexts: [],
+            
+            shake: 0,
+            hitStop: 0, // FRAMES TO FREEZE
+            comboTimer: 0,
+            comboCount: 0,
+
+            start() {
+                this.active = true;
+                this.score = 0;
+                this.fugaMeter = 0;
+                this.enemies = [];
+                this.particles = [];
+                this.slashPoints = [];
+                this.floatingTexts = [];
+                this.comboCount = 0;
+                
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.getElementById('score').innerText = '0';
+                document.body.classList.remove('glitch-active');
+                
+                if(this.spawner) clearInterval(this.spawner);
+                // LESS FREQUENT SPAWN RATE (Changed from 750 to 1500)
+                this.spawner = setInterval(() => this.spawnEnemy(), 1500); 
+                
+                this.loop();
+            },
+
+            spawnEnemy() {
+                if(!this.active || this.hitStop > 0) return;
+                
+                const edge = Math.floor(Math.random() * 4); 
+                let x, y, vx, vy;
+                const speed = 4 + (this.score * 0.06); 
+                const size = 30 + Math.random() * 20; 
+
+                if(edge === 0) { x = Math.random() * canvas.width; y = -50; vx = (Math.random()-0.5)*3; vy = speed; } 
+                else if(edge === 1) { x = canvas.width + 50; y = Math.random() * canvas.height; vx = -speed; vy = (Math.random()-0.5)*3; } 
+                else if(edge === 2) { x = Math.random() * canvas.width; y = canvas.height + 50; vx = (Math.random()-0.5)*3; vy = -speed; } 
+                else { x = -50; y = Math.random() * canvas.height; vx = speed; vy = (Math.random()-0.5)*3; }
+
+                const isTank = Math.random() > 0.85;
+                
+                this.enemies.push({ 
+                    x, y, vx, vy, size, 
+                    type: isTank ? 'tank' : 'normal', 
+                    // TANK HP CHANGED TO 2
+                    hp: isTank ? 2 : 1, 
+                    maxHp: isTank ? 2 : 1,
+                    color: isTank ? '#9900cc' : '#555',
+                    pulse: Math.random() * Math.PI,
+                    hitTimer: 0
+                });
+            },
+
+            loop() {
+                if(!this.active) return;
+
+                // --- HIT STOP LOGIC ---
+                if(this.hitStop > 0) {
+                    this.hitStop--;
+                    // Draw everything frozen (no updates) but shake the screen
+                    ctx.save();
+                    const dx = (Math.random() - 0.5) * 10;
+                    const dy = (Math.random() - 0.5) * 10;
+                    ctx.translate(dx, dy);
+                    this.drawScene(); // Only Draw
+                    ctx.restore();
+                    requestAnimationFrame(() => this.loop());
+                    return; // SKIP UPDATE
+                }
+
+                // Normal Update
+                this.updateState();
+                this.drawScene();
+                requestAnimationFrame(() => this.loop());
+            },
+
+            updateState() {
+                // Shake Decay
+                this.shake *= 0.9;
+                if(this.shake < 0.5) this.shake = 0;
+
+                // Updates
+                this.updateSlash();
+                this.updateEnemies();
+                this.updateParticles();
+                this.updateTexts();
+
+                // UI
+                document.getElementById('fuga-fill').style.width = this.fugaMeter + '%';
+                const fText = document.getElementById('fuga-text');
+                if(this.fugaMeter >= 100) fText.classList.add('ready');
+                else fText.classList.remove('ready');
+
+                if(this.comboTimer > 0) this.comboTimer--;
+                else this.comboCount = 0;
+            },
+
+            drawScene() {
+                // Background Clear with Trail
+                ctx.fillStyle = 'rgba(10, 0, 0, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                if(this.shake > 0) {
+                    ctx.save();
+                    const dx = (Math.random() - 0.5) * this.shake;
+                    const dy = (Math.random() - 0.5) * this.shake;
+                    ctx.translate(dx, dy);
+                }
+
+                // Grid (Subtle Red)
+                ctx.strokeStyle = '#330000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const gridSize = 150;
+                // Only draw a few lines to save perf and look "cursed"
+                for(let i=0; i<canvas.width; i+=gridSize) { ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); }
+                for(let i=0; i<canvas.height; i+=gridSize) { ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); }
+                ctx.stroke();
+
+                // Draw Entities
+                this.drawSlash();
+                this.enemies.forEach(e => this.drawEnemy(e));
+                this.particles.forEach(p => this.drawParticle(p));
+                this.floatingTexts.forEach(t => this.drawText(t));
+
+                if(this.shake > 0) ctx.restore();
+            },
+
+            drawEnemy(e) {
+                const pulseSize = Math.sin(e.pulse) * 3;
+                
+                // Glow
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = e.hitTimer > 0 ? '#fff' : e.color;
+                
+                ctx.fillStyle = e.hitTimer > 0 ? '#ffffff' : e.color; 
+                ctx.beginPath(); 
+                ctx.arc(e.x, e.y, e.size + pulseSize, 0, Math.PI * 2); 
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Scary Eyes
+                if(e.hitTimer <= 0) {
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    const dx = (canvas.width/2 - e.x) * 0.02; // Look at center
+                    const dy = (canvas.height/2 - e.y) * 0.02;
+                    
+                    // Left Eye
+                    ctx.ellipse(e.x - 10 + dx, e.y - 5 + dy, 4, 8, 0, 0, Math.PI*2);
+                    // Right Eye
+                    ctx.ellipse(e.x + 10 + dx, e.y - 5 + dy, 4, 8, 0, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            },
+
+            drawSlash() {
+                if(this.slashPoints.length < 2) return;
+                
+                ctx.beginPath();
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#ff0044';
+                ctx.fillStyle = '#fff';
+
+                for(let i=0; i<this.slashPoints.length - 1; i++) {
+                    const p1 = this.slashPoints[i];
+                    const p2 = this.slashPoints[i+1];
+                    const width = p1.life * 2; // Thicker slash
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = width;
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+            },
+
+            drawParticle(p) {
+                if(p.type === 'dot') {
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = Math.max(0, p.life);
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                    ctx.globalAlpha = 1;
+                } else if(p.type === 'slash') {
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${p.life})`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    const len = p.size;
+                    const dx = Math.cos(p.angle) * len;
+                    const dy = Math.sin(p.angle) * len;
+                    ctx.moveTo(p.x - dx, p.y - dy);
+                    ctx.lineTo(p.x + dx, p.y + dy);
+                    ctx.stroke();
+                }
+            },
+
+            drawText(t) {
+                ctx.font = "bold 24px Orbitron";
+                ctx.textAlign = "center";
+                ctx.fillStyle = t.color;
+                ctx.shadowColor = t.color;
+                ctx.shadowBlur = 10;
+                ctx.globalAlpha = Math.max(0, t.life);
+                ctx.fillText(t.text, t.x, t.y);
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+            },
+
+            updateSlash() {
+                this.slashPoints.push({ x: this.mouse.x, y: this.mouse.y, life: 6 }); // Shorter life, faster feeling
+                this.slashPoints = this.slashPoints.filter(p => p.life > 0);
+                this.slashPoints.forEach(p => p.life -= 1);
+
+                // RAYCASTING HIT DETECTION
+                const vx = this.mouse.x - this.lastMouse.x;
+                const vy = this.mouse.y - this.lastMouse.y;
+                const dist = Math.hypot(vx, vy);
+                
+                if(dist > 15) {
+                    if(dist > 35 && Math.random() > 0.6) AudioFX.slash();
+
+                    // Interpolate
+                    const steps = Math.ceil(dist / 10);
+                    
+                    this.enemies.forEach(e => {
+                        let hit = false;
+                        for(let i=0; i<=steps; i++) {
+                            const t = i / steps;
+                            const checkX = this.lastMouse.x + (vx * t);
+                            const checkY = this.lastMouse.y + (vy * t);
+                            if(Math.hypot(checkX - e.x, checkY - e.y) < e.size + 20) {
+                                hit = true; break; 
+                            }
+                        }
+                        if(hit) this.damageEnemy(e);
+                    });
+                }
+                this.lastMouse.x = this.mouse.x;
+                this.lastMouse.y = this.mouse.y;
+            },
+
+            damageEnemy(e) {
+                if(e.hitTimer > 0) return;
+                e.hitTimer = 4;
+
+                e.hp--;
+                this.createParticles(e.x, e.y, 5, '#fff', 5);
+                
+                if(e.type === 'tank') {
+                    AudioFX.tankHit();
+                    this.hitStop = 2; // Small freeze on tank hit
+                    this.shake = 5;
+                } else {
+                    AudioFX.hit();
+                }
+
+                if(e.hp <= 0) {
+                    e.dead = true;
+                    this.killEnemy(e);
+                } else {
+                    e.vx *= -1.5; e.vy *= -1.5; // Stronger Knockback
+                    e.pulse = 10;
+                }
+            },
+
+            killEnemy(e) {
+                this.score++;
+                this.hitStop = 3; // Freeze frame on kill
+                this.shake = 20;  // Big Shake
+                
+                // Glitch effect on kill
+                document.body.classList.add('glitch-active');
+                setTimeout(() => document.body.classList.remove('glitch-active'), 100);
+
+                AudioFX.die();
+                
+                // Color logic
+                const bloodColor = e.type === 'tank' ? '#d0f' : '#ff0033';
+                this.createParticles(e.x, e.y, 25, bloodColor, 12);
+                this.createSlashEffect(e.x, e.y, e.size * 3.5);
+
+                this.fugaMeter = Math.min(this.fugaMeter + 8, 100);
+
+                // Combo
+                this.comboCount++;
+                this.comboTimer = 50; 
+                if(this.comboCount > 1) {
+                    this.createFloatingText(e.x, e.y - 40, `${this.comboCount}x COMBO`, '#ffcc00');
+                }
+                document.getElementById('score').innerText = this.score;
+            },
+
+            updateEnemies() {
+                for(let i = this.enemies.length - 1; i >= 0; i--) {
+                    let e = this.enemies[i];
+                    if(e.dead) { this.enemies.splice(i, 1); continue; }
+
+                    e.x += e.vx; e.y += e.vy;
+                    e.pulse += 0.2;
+                    if(e.hitTimer > 0) e.hitTimer--;
+
+                    if(e.x < -100 || e.x > canvas.width + 100 || e.y < -100 || e.y > canvas.height + 100) {
+                        this.gameOver();
+                    }
+                }
+            },
+
+            createSlashEffect(x, y, size) {
+                const angle = Math.random() * Math.PI;
+                this.particles.push({ type: 'slash', x, y, angle, size, life: 1.0 });
+            },
+
+            createParticles(x, y, count, color, speed) {
+                for(let i=0; i<count; i++) {
+                    this.particles.push({
+                        type: 'dot', x, y,
+                        vx: (Math.random() - 0.5) * speed,
+                        vy: (Math.random() - 0.5) * speed,
+                        life: 1.0, size: Math.random() * 5 + 2, color
+                    });
+                }
+            },
+
+            createFloatingText(x, y, text, color) {
+                this.floatingTexts.push({ x, y, text, color, life: 1.2, vy: -2 });
+            },
+
+            updateParticles() {
+                for(let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    if(p.type === 'dot') {
+                        p.x += p.vx; p.y += p.vy;
+                        p.life -= 0.02; // Slower fade
+                        p.vy += 0.3; // Gravity
+                        p.vx *= 0.92; // Friction
+                    } 
+                    else if (p.type === 'slash') {
+                        p.life -= 0.15;
+                    }
+                    if(p.life <= 0) this.particles.splice(i, 1);
+                }
+            },
+
+            updateTexts() {
+                for(let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                    let t = this.floatingTexts[i];
+                    t.y += t.vy;
+                    t.life -= 0.02;
+                    if(t.life <= 0) this.floatingTexts.splice(i, 1);
+                }
+            },
+
+            castFuga() {
+                if(this.fugaMeter < 100) return;
+                AudioFX.fuga();
+                this.fugaMeter = 0;
+                
+                // Big Flash
+                const flash = document.getElementById('flash');
+                flash.style.opacity = 1;
+                setTimeout(() => flash.style.opacity = 0, 1500);
+
+                // Huge Shake + Hit Stop
+                this.shake = 50;
+                this.hitStop = 10; // Long freeze
+
+                // Glitch the whole screen
+                document.body.classList.add('glitch-active');
+                setTimeout(() => document.body.classList.remove('glitch-active'), 2000);
+
+                this.createParticles(canvas.width/2, canvas.height/2, 150, 'orange', 50);
+
+                // Kill Loop
+                let killed = 0;
+                this.enemies.forEach(e => {
+                    this.createParticles(e.x, e.y, 20, 'black', 20);
+                    this.createParticles(e.x, e.y, 20, 'orange', 20);
+                    killed++;
+                });
+                
+                this.score += killed;
+                if(killed > 0) this.createFloatingText(canvas.width/2, canvas.height/2, "DEEP FRIED", "orange");
+                
+                this.enemies = [];
+                document.getElementById('score').innerText = this.score;
+            },
+
+            gameOver() {
+                this.active = false;
+                clearInterval(this.spawner);
+                document.getElementById('final-score').innerText = this.score;
+                document.getElementById('game-over').classList.remove('hidden');
+                document.body.classList.remove('glitch-active');
+            }
+        };
+
+        window.addEventListener('mousemove', e => {
+            Game.mouse.x = e.clientX;
+            Game.mouse.y = e.clientY;
+        });
+
+        window.addEventListener('keydown', e => {
+            if(e.code === 'Space') Game.castFuga();
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nah I'd Win - Portfolio</title>
+    <link rel="stylesheet" href="assets/main.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <h1>Nah I'd Win</h1>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About Me</a></li>
+                    <li><a href="#">Gallery</a></li>
+                    <li><a href="#">Interactive Page</a></li>
+                    <li><a href="#">Playground</a></li>
+                    <li><a href="#">Style Switcher</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Logo/Brand Section -->
+        <section class="logo-section">
+            <img src="https://via.placeholder.com/150x50?text=Your+Logo" alt="Your Brand Logo">
+        </section>
+
+        <!-- Opening Section with Image on Right -->
+        <section class="opening-section">
+            <div class="opening-content">
+                <h2>Welcome to Gojo KitKat</h2>
+                <p>I am the strongest sorcerer.</p>
+                <a href="#portfolio">View Portfolio</a>
+            </div>
+            <div class="opening-image">
+                <img src="https://via.placeholder.com/500x300?text=Student+or+Landing+Image" alt="Student or Landing Image">
+            </div>
+        </section>
+
+        <!-- Portfolio Section -->
+        <section id="portfolio" class="portfolio-section">
+            <h3>Portfolio</h3>
+            <div class="portfolio-grid">
+                <div class="portfolio-item">
+                    <img src="https://via.placeholder.com/300" alt="Project 1">
+                    <h4>Project 1</h4>
+                    <p>Placeholder Text</p>
+                </div>
+                <div class="portfolio-item">
+                    <img src="https://via.placeholder.com/300" alt="Project 2">
+                    <h4>Project 2</h4>
+                    <p>Placeholder Text</p>
+                </div>
+                <div class="portfolio-item">
+                    <img src="https://via.placeholder.com/300" alt="Project 3">
+                    <h4>Project 3</h4>
+                    <p>Placeholder Text</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <!-- Added footer picture -->
+            <img src="https://via.placeholder.com/120x60?text=Footer+Logo" alt="Footer Logo" width="120">
+            
+            <!-- Updated text with copyright sign -->
+            <p>&copy; 2025 Nah I'd Win. All rights reserved.</p>
+            
+            <!-- Updated links -->
+            <div>
+                <a href="#">Gojo Kitkats</a>
+                <a href="#">Jujutsu High</a>
+                <a href="#">Nah I'd Win.Co</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" data-domain-sync>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Void Archives - Gallery</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* ------------------------------------ */
+        /* --- 1. SHARED THEME VARIABLES --- */
+        /* ------------------------------------ */
+        @font-face {
+            font-family: 'CCroman';
+            src: url('assets/fonts/CCroman.ttf') format('truetype');
+        }
+
+        :root {
+            --color-background: #121212; 
+            --color-text: #E0E0E0; 
+            --color-neon-blue: #33CCFF;
+            --color-neon-purple: #C850C0;
+            --color-neon-red: #FF3366;
+            --header-height: 80px;
+            --font-headers: 'CCroman', serif; 
+        }
+
+        .sukuna-mode {
+            --color-background: #1a0505;
+            --color-text: #ffe6e6;
+            --color-neon-red: #ff0000;
+            --color-neon-blue: #ff3333;
+            --color-neon-purple: #cc0000;
+        }
+
+        body {
+            background-color: var(--color-background);
+            background-image: url('assets/images/voidd.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--color-text);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            cursor: url('assets/images/hand2.png') 16 16, auto;
+        }
+        
+        /* Cursor Consistency */
+        a, button, .filter-btn { cursor: url('assets/images/void2.png') 0 0, pointer; }
+
+        .sukuna-mode body {
+            background-image: linear-gradient(rgba(80, 0, 0, 0.8), rgba(20, 0, 0, 0.9)), url('assets/images/yes.png') !important;
+            cursor: url('assets/images/finger2.png') 0 0, auto;
+        }
+        .sukuna-mode a, .sukuna-mode button, .sukuna-mode .filter-btn { cursor: url('assets/images/Sclick2.png') 0 0, pointer; }
+        .sukuna-mode .nav-links a:hover { color: var(--color-neon-red); text-shadow: 0 0 10px var(--color-neon-red); }
+        .sukuna-mode .filter-btn { border-color: var(--color-neon-red); color: var(--color-neon-red); box-shadow: 0 0 5px rgba(255, 0, 0, 0.3); }
+        .sukuna-mode .filter-btn:hover, .sukuna-mode .filter-btn.active {
+            background: var(--color-neon-red);
+            color: #000;
+            box-shadow: 0 0 15px var(--color-neon-red);
+        }
+        .sukuna-mode .nav-button {
+            border-color: var(--color-neon-red);
+            color: var(--color-neon-red);
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+        }
+        .sukuna-mode .nav-button:hover {
+            background: var(--color-neon-red);
+            color: #000;
+            box-shadow: 0 0 15px var(--color-neon-red);
+        }
+        .sukuna-mode .active-music {
+            background-color: var(--color-neon-red) !important;
+            color: #000 !important;
+            box-shadow: 0 0 15px var(--color-neon-red) !important;
+        }
+        .sukuna-mode .gallery-item:hover { box-shadow: 0 0 20px var(--color-neon-red); }
+        .sukuna-mode .item-overlay h3 { color: var(--color-neon-red); }
+        .sukuna-mode #lightbox img { border-color: var(--color-neon-red); box-shadow: 0 0 30px var(--color-neon-red); }
+
+        /* ------------------------------------ */
+        /* --- 2. GALLERY SPECIFIC STYLES --- */
+        /* ------------------------------------ */
+        
+        /* Filter Buttons */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--color-neon-blue);
+            color: #fff;
+            padding: 10px 25px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.3s;
+            border-radius: 4px;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--color-neon-blue);
+            color: #000;
+            box-shadow: 0 0 15px var(--color-neon-blue);
+        }
+
+        /* The Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            position: relative;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background: #000;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px var(--color-neon-blue);
+            z-index: 10;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s;
+        }
+
+        /* Overlay Text on Hover */
+        .item-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gallery-item:hover .item-overlay { opacity: 1; }
+
+        .item-overlay h3 { margin: 0; color: var(--color-neon-blue); font-family: var(--font-headers); }
+        .item-overlay p { margin: 5px 0 0; font-size: 0.8rem; color: #ccc; }
+
+        /* Lightbox (Full Screen View) */
+        #lightbox {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        #lightbox img {
+            max-width: 90%;
+            max-height: 80vh;
+            border: 2px solid var(--color-neon-blue);
+            box-shadow: 0 0 30px var(--color-neon-blue);
+        }
+
+        .close-lightbox {
+            position: absolute; top: 20px; right: 30px;
+            color: #fff; font-size: 40px; cursor: pointer;
+        }
+
+        /* ------------------------------------ */
+        /* --- 3. SHARED HEADER & FOOTER --- */
+        /* ------------------------------------ */
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(0,0,0,0.8);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 0;
+            backdrop-filter: blur(5px);
+        }
+        .container { width: 90%; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        
+        .nav-links { display: flex; align-items: center; }
+        .nav-links a {
+            color: #fff; text-decoration: none; margin-left: 20px; 
+            font-weight: bold; text-transform: uppercase; transition: 0.3s;
+        }
+        .nav-links a:hover { color: var(--color-neon-blue); text-shadow: 0 0 10px var(--color-neon-blue); }
+
+        /* Music Button Style */
+        .nav-button {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--color-neon-blue);
+            color: var(--color-neon-blue); padding: 5px 15px; margin-left: 20px;
+            font-weight: bold; cursor: pointer; border-radius: 4px; text-transform: uppercase;
+            box-shadow: 0 0 5px rgba(51, 204, 255, 0.3); transition: all 0.3s;
+            font-size: 0.8rem;
+        }
+        .nav-button:hover { background: var(--color-neon-blue); color: #000; box-shadow: 0 0 15px var(--color-neon-blue); }
+        
+        .active-music {
+            background-color: var(--color-neon-blue) !important;
+            color: #000 !important;
+            box-shadow: 0 0 15px var(--color-neon-blue) !important;
+        }
+
+        h1 { font-family: var(--font-headers); color: #fff; margin: 0; font-size: 1.8rem; }
+
+        @media (max-width: 768px) {
+            body { background-attachment: scroll !important; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 10px; }
+            .gallery-item { height: 150px; } 
+            header .container { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="assets/audio/Cyberpunk.mp3" type="audio/mpeg">
+    </audio>
+
+   <header>
+        <div class="container">
+            <h1>VOID ARCHIVES</h1>
+            <nav class="nav-links">
+                <a href="index.html?nointro=1">Home</a>
+                <a href="gallery.html" style="color: var(--color-neon-blue);">Gallery</a>
+                <a href="playground.html" class="nav-item">Playground</a>
+                <a href="interactive.html" class="nav-item">Interactive</a>
+                
+                <button id="audio-toggle" class="nav-button">🔇 OFF</button>
+            </nav>
+        </div>
+    </header>
+    
+    <div class="filter-container">
+        <button class="filter-btn active" onclick="filterGallery('all')">All</button>
+        <button class="filter-btn" onclick="filterGallery('gojo')">Gojo</button>
+        <button class="filter-btn" onclick="filterGallery('sukuna')">Sukuna</button>
+        <button class="filter-btn" onclick="filterGallery('memes')">Lobotomy</button>
+        <button class="filter-btn" onclick="filterGallery('CK')">CHARLIE KIRK</button>
+    </div>
+
+    <div class="gallery-grid" id="gallery-container"></div>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <span class="close-lightbox">&times;</span>
+        <img id="lightbox-img" src="" alt="Full View">
+    </div>
+
+    <script src="domain-theme.js"></script>
+    <script>
+        // ==========================================
+        // === 1. AUDIO LOGIC ===
+        // ==========================================
+        const audio = document.getElementById('bg-music');
+        const toggleButton = document.getElementById('audio-toggle');
+
+        if (toggleButton && audio) {
+            // Check if we can autoplay (browsers often block this on new pages without interaction)
+            // But we will try setting volume low
+            audio.volume = 0.5;
+
+            toggleButton.addEventListener('click', () => {
+                if (audio.paused) {
+                    audio.play().then(() => {
+                        toggleButton.textContent = "🔊 ON";
+                        toggleButton.classList.add('active-music');
+                    }).catch(e => console.log("Audio Error:", e));
+                } else {
+                    audio.pause();
+                    toggleButton.textContent = "🔇 OFF";
+                    toggleButton.classList.remove('active-music');
+                }
+            });
+        }
+
+        // ==========================================
+        // === 2. GALLERY DATA & LOGIC ===
+        // ==========================================
+         const images = [
+            // --- GOJO SATORU ---
+            { src: 'assets/images/nah.png', category: 'gojo', title: 'Hollow Purple', desc: 'Imaginary Technique.' },
+            { src: 'assets/images/gojo2.jpg', category: 'gojo', title: 'Infinite Void', desc: 'Domain Expansion.' },
+            { src: 'assets/images/gojo3.jpg', category: 'gojo', title: 'Six Eyes', desc: 'The Honored One.' },
+
+            // --- RYOMEN SUKUNA ---
+            { src: 'assets/images/sukuna1.jpg', category: 'sukuna', title: 'Malevolent Shrine', desc: 'King of Curses.' },
+            { src: 'assets/images/sukuna2.jpg', category: 'sukuna', title: 'Divine Dog', desc: 'Megumi Possession.' },
+            { src: 'assets/images/sukuna3.jpg', category: 'sukuna', title: 'Fire Arrow', desc: 'Open: Fuga.' },
+
+            // --- MEMES ---
+            { src: 'assets/images/nahwewin.jpg', category: 'memes', title: 'Nah I\'d Win', desc: 'The classic.' },
+            { src: 'assets/images/jogoat.png', category: 'memes', title: 'Stand Proud', desc: 'You are strong.' },
+            { src: 'assets/images/skibidi.png', category: 'memes', title: 'With This Treasure', desc: 'Mahoraga incoming.' },
+            { src: 'assets/images/salmon2.png', category: 'memes', title: ' Salmon', desc: 'Peak fiction.' },
+            { src: 'assets/images/thukuna.webp', category: 'memes', title: 'THUKUNA', desc: 'GOJO HELLO GOJO.' },
+            { src: 'assets/images/dawg.webp', category: 'memes', title: 'Malevolent Sponge', desc: 'Domain Expansion: Bikini Bottom.' },
+            { src: 'assets/images/johnjujutsu.png', category: 'memes', title: 'John Jujutsu', desc: 'The strongest in history.' },{ src: 'assets/images/johnkaisen.webp', category: 'memes', title: 'John Kaisen', desc: 'The strongest of today.' },
+            { src: 'assets/images/johnrabbit.png', category: 'memes', title: 'John Rabbit', desc: 'He solos the verse.' },
+             { src: 'assets/images/johnzenin.jpg', category: 'memes', title: 'John Zenin', desc: 'The honored one.' },
+            
+           
+            // --- CHARLIE KIRK (UPDATED DESCRIPTIONS) ---
+            { 
+                src: 'assets/images/kirk.png', 
+                category: 'CK', 
+                title: 'Super Kirk', 
+                desc: 'Face shrinking at 50% output.' 
+            },
+            { 
+                src: 'assets/images/kirk2.png', 
+                category: 'CK', 
+                title: 'Super Kirk 3', 
+                desc: 'And this... is to go even further beyond.' 
+            },
+            { 
+                src: 'assets/images/kirk3.png', 
+                category: 'CK', 
+                title: 'Super Kirk 4', 
+                desc: 'Reject modernity, return to Monke.' 
+            },
+            { 
+                src: 'assets/images/kirk4.png', 
+                category: 'CK', 
+                title: 'Super Kirk God', 
+                desc: 'Divine Ki detected in the debate hall.' 
+            },
+            { 
+                src: 'assets/images/kirk5.png', 
+                category: 'CK', 
+                title: 'Super Kirk Blue', 
+                desc: 'Cursed Technique: LOGIC & FACTS.' 
+            },
+            { 
+                src: 'assets/images/kirk6.png', 
+                category: 'CK', 
+                title: 'Super Kirk Rosé', 
+                desc: 'Subarashii... this face size is beautiful.' 
+            },
+            { 
+                src: 'assets/images/kirk7.png', 
+                category: 'CK', 
+                title: 'Kirk Ultra Ego', 
+                desc: 'A technique derived solely from destruction.' 
+            },
+            { 
+                src: 'assets/images/kirk9.png', 
+                category: 'CK', 
+                title: 'Legendary Super Kirk', 
+                desc: 'His face is MAXIMUM.' 
+            },
+            { 
+                src: 'assets/images/kirkjo.png', 
+                category: 'CK', 
+                title: 'Domain Expansion', 
+                desc: 'Infinite Forehead.' 
+            }
+        ];
+
+        const container = document.getElementById('gallery-container');
+
+        // Render Gallery
+        function renderGallery(filter) {
+            container.innerHTML = ''; 
+            
+            images.forEach((img, index) => {
+                if (filter === 'all' || img.category === filter) {
+                    const div = document.createElement('div');
+                    div.className = 'gallery-item reveal';
+                    
+                    div.innerHTML = `
+                        <img src="${img.src}" loading="lazy" alt="${img.title}" 
+                             onerror="this.onerror=null; this.src='assets/images/voidd.jpg';"> 
+                        <div class="item-overlay">
+                            <h3>${img.title}</h3>
+                            <p>${img.desc}</p>
+                        </div>
+                    `;
+                    
+                    div.onclick = () => openLightbox(div.querySelector('img').src);
+                    container.appendChild(div);
+                }
+            });
+
+            // Animation
+            const items = document.querySelectorAll('.reveal');
+            items.forEach((item, i) => {
+                item.style.opacity = '0';
+                item.style.animation = `fadeIn 0.5s ease forwards ${i * 0.1}s`;
+            });
+        }
+
+        // Filter Logic
+        function filterGallery(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if(event) event.target.classList.add('active');
+            renderGallery(category);
+        }
+
+        // Lightbox Logic
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightbox.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeLightbox() {
+            lightbox.style.display = 'none';
+            document.body.style.overflow = 'auto'; 
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGallery('all');
+            const style = document.createElement('style');
+            style.innerHTML = `@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }`;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJK ARCADE: LIMITLESS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        :root {
+            --void-dark: #05000a;
+            --void-purple: #bd00ff;
+            --gojo-blue: #00f3ff;
+            --gojo-red: #ff003c;
+        }
+
+        body {
+            margin: 0; background-color: var(--void-dark); color: white;
+            font-family: 'Orbitron', sans-serif; overflow: hidden;
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            user-select: none; cursor: crosshair;
+        }
+
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px);
+            background-size: 550px 550px; z-index: -2;
+        }
+
+        .back-home {
+            position: fixed; top: 20px; left: 20px; color: white; text-decoration: none;
+            border: 1px solid #555; padding: 8px 15px; font-size: 0.8rem; z-index: 100;
+            background: rgba(0,0,0,0.5); border-radius: 4px;
+        }
+        .back-home:hover { border-color: var(--gojo-blue); color: var(--gojo-blue); }
+
+        /* --- HUD --- */
+        #hud {
+            position: absolute; top: 20px; width: 860px; pointer-events: none;
+            display: flex; justify-content: space-between; z-index: 60;
+        }
+        .score-display { font-size: 1.5rem; text-shadow: 0 0 10px var(--void-purple); }
+        .ability-display { text-align: right; font-size: 0.8rem; }
+        .cd-text { margin-bottom: 4px; color: #555; transition: 0.3s; }
+        
+        .ready-blue { color: var(--gojo-blue); text-shadow: 0 0 8px var(--gojo-blue); opacity: 1 !important;}
+        .ready-red { color: var(--gojo-red); text-shadow: 0 0 8px var(--gojo-red); opacity: 1 !important;}
+        .ready-inf { color: white; text-shadow: 0 0 8px white; opacity: 1 !important;}
+        .ready-purple { color: var(--void-purple); text-shadow: 0 0 10px var(--void-purple); opacity: 1 !important;}
+        .active-skill { color: white !important; text-shadow: 0 0 15px white !important; font-weight: 900; transform: scale(1.1); }
+
+        /* --- GAME STAGE --- */
+        #game-stage {
+            width: 900px; height: 600px; border: 2px solid var(--void-purple);
+            background: rgba(10, 0, 20, 0.7); position: relative;
+            overflow: hidden; border-radius: 12px;
+            box-shadow: 0 0 40px rgba(189, 0, 255, 0.2);
+        }
+
+        #gojo {
+            position: absolute; left: 30px; top: 250px; width: 70px; height: 90px;
+            background-image: url('assets/images/123.png'); background-size: contain;
+            background-repeat: no-repeat; z-index: 10; filter: drop-shadow(0 0 10px var(--gojo-blue));
+            transition: top 0.05s linear;
+        }
+
+        .infinity-aura { 
+            box-shadow: 0 0 40px 10px white, inset 0 0 20px white; 
+            border-radius: 50%; border: 2px solid white;
+        }
+        
+        .charging-aura {
+            position: absolute; width: 120px; height: 120px; border-radius: 50%;
+            background: radial-gradient(circle, var(--void-purple), transparent);
+            animation: pulse-charge 0.2s infinite; transform: translate(-25px, -15px); opacity: 0.6;
+            pointer-events: none;
+        }
+        @keyframes pulse-charge { 0% { transform: translate(-25px, -15px) scale(1); } 100% { transform: translate(-25px, -15px) scale(1.3); } }
+
+        #purple-wave {
+            position: absolute; top: 0; left: -200px; width: 300px; height: 100%;
+            background: radial-gradient(circle at center, white, var(--void-purple), transparent);
+            box-shadow: 0 0 120px var(--void-purple), inset 0 0 50px white; 
+            z-index: 40; display: none; opacity: 0.9;
+        }
+
+        .enemy {
+            position: absolute; width: 60px; height: 60px;
+            background-image: url('assets/images/Jogohead.jpg'); background-size: cover;
+            border-radius: 50%; border: 2px solid var(--gojo-red); z-index: 9;
+            box-shadow: 0 0 10px var(--gojo-red);
+        }
+
+        .projectile {
+            position: absolute; width: 18px; height: 18px;
+            background: radial-gradient(circle, #fff, var(--gojo-blue));
+            border-radius: 50%; box-shadow: 0 0 15px var(--gojo-blue);
+            z-index: 8;
+        }
+
+        /* --- ABILITY VISUALS --- */
+        #cursor-effect {
+            position: absolute; width: 20px; height: 20px;
+            border-radius: 50%; pointer-events: none; z-index: 15;
+            transform: translate(-50%, -50%); display: none;
+        }
+        
+        .blue-mode {
+            display: block !important; width: 80px !important; height: 80px !important;
+            border: 2px solid var(--gojo-blue); background: rgba(0, 243, 255, 0.15);
+            box-shadow: 0 0 30px var(--gojo-blue), inset 0 0 20px var(--gojo-blue);
+            animation: spin 1s infinite linear;
+        }
+
+        .red-mode {
+            display: block !important; width: 120px !important; height: 120px !important;
+            border: 2px solid var(--gojo-red); background: rgba(255, 0, 60, 0.15);
+            box-shadow: 0 0 40px var(--gojo-red), inset 0 0 20px var(--gojo-red);
+            animation: pulse 0.3s infinite;
+        }
+
+        @keyframes spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(0.9); } 50% { transform: translate(-50%, -50%) scale(1.1); } 100% { transform: translate(-50%, -50%) scale(0.9); } }
+
+        /* --- CHARGE BAR --- */
+        #charge-container {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 12px; border: 1px solid var(--void-purple); display: none; z-index: 70;
+            background: rgba(0,0,0,0.5);
+        }
+        #charge-fill { width: 0%; height: 100%; background: var(--void-purple); box-shadow: 0 0 20px var(--void-purple); }
+
+        /* --- SCREENS --- */
+        .overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .hidden { display: none !important; }
+        .btn {
+            border: 2px solid var(--void-purple); color: white; background: transparent;
+            padding: 15px 40px; font-family: 'Orbitron'; cursor: pointer; text-transform: uppercase;
+            font-size: 1.2rem; margin-top: 20px; transition: 0.2s;
+        }
+        .btn:hover { background: var(--void-purple); box-shadow: 0 0 20px var(--void-purple); color: black; }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+    <a href="playground.html" class="back-home">⬅ BACK TO SELECT</a>
+
+    <div id="game-stage">
+        <div id="hud">
+            <div class="score-display">KILLS: <span id="kill-count">0</span></div>
+            <div class="ability-display">
+                <div id="cd-1" class="cd-text ready-blue">[1] BLUE: READY</div>
+                <div id="cd-2" class="cd-text ready-red">[2] RED: READY</div>
+                <div id="cd-3" class="cd-text ready-inf">[3] INFINITY: READY</div>
+                <div id="cd-4" class="cd-text ready-purple">[4] HOLLOW PURPLE: READY</div>
+            </div>
+        </div>
+
+        <div id="cursor-effect"></div>
+        <div id="gojo"></div>
+        <div id="purple-wave"></div>
+        
+        <div id="charge-container">
+            <div id="charge-fill"></div>
+            <div style="font-size: 10px; margin-top: 5px; text-align: center; letter-spacing: 2px; text-shadow: 0 0 5px var(--void-purple);">
+                IMAGINARY TECHNIQUE: PURPLE
+            </div>
+        </div>
+
+        <div id="start-screen" class="overlay">
+            <h1 style="font-size: 3rem; color: var(--void-purple); text-shadow: 0 0 20px var(--void-purple);">LIMITLESS</h1>
+            <p style="color: #aaa; text-align: center; line-height: 1.6;">
+                <span style="color:var(--gojo-blue)">[LEFT CLICK]</span> SHOOT BLUE ORBS<br>
+                <span style="color:var(--gojo-blue)">[HOLD 1]</span> BLUE (PULL)<br>
+                <span style="color:var(--gojo-red)">[HOLD 2]</span> RED (BLAST)<br>
+                <span style="color:white">[PRESS 3]</span> INFINITY BARRIER<br>
+                <span style="color:var(--void-purple)">[HOLD 4]</span> HOLLOW PURPLE
+            </p>
+            <button class="btn" onclick="Game.start()">EXPAND DOMAIN</button>
+        </div>
+
+        <div id="game-over" class="overlay hidden">
+            <h1 style="color: var(--gojo-red); text-shadow: 0 0 20px red;">SEALED</h1>
+            <p>CURSES EXORCISED: <span id="final-kills" style="font-size: 1.5rem; font-weight:bold;">0</span></p>
+            <button class="btn" onclick="Game.start()">RETRY</button>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO ENGINE ---
+        const AudioFX = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            play(freq, type, dur, vol=0.1) {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                o.type = type; o.frequency.value = freq;
+                g.gain.setValueAtTime(vol, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + dur);
+            },
+            shoot() { this.play(800, 'sine', 0.1, 0.05); },
+            hit() { this.play(150, 'sawtooth', 0.1, 0.15); },
+            blue() { this.play(100, 'sine', 0.1, 0.05); },
+            red() { this.play(80, 'square', 0.1, 0.05); },
+            purple() { this.play(50, 'square', 1.5, 0.3); }
+        };
+
+        const Game = {
+            active: false,
+            kills: 0,
+            gojoY: 250,
+            mouseX: 0, mouseY: 0,
+            keys: {},
+            cd: { blue: false, red: false, inf: false, purple: false },
+            state: { blue: false, red: false, inf: false, charging: false },
+            charge: 0,
+            entities: { projectiles: [], enemies: [] },
+            loopId: null,
+            spawnId: null,
+
+            dom: {
+                stage: document.getElementById('game-stage'),
+                cursor: document.getElementById('cursor-effect'),
+                score: document.getElementById('kill-count'),
+                gojo: document.getElementById('gojo')
+            },
+
+            init() {
+                window.addEventListener('keydown', e => {
+                    if(!this.active) return;
+                    this.keys[e.key] = true;
+                    if(e.key === '1') this.useAbility('blue', 2000, 3000);
+                    if(e.key === '2') this.useAbility('red', 1000, 4000);
+                    if(e.key === '3') this.useInfinity();
+                });
+                
+                window.addEventListener('keyup', e => {
+                    this.keys[e.key] = false;
+                    if(e.key === '4') this.stopCharge();
+                });
+
+                window.addEventListener('mousedown', () => { if(this.active) this.shoot(); });
+                
+                this.dom.stage.addEventListener('mousemove', e => {
+                    const rect = this.dom.stage.getBoundingClientRect();
+                    this.mouseX = e.clientX - rect.left;
+                    this.mouseY = e.clientY - rect.top;
+                });
+            },
+
+            start() {
+                this.active = true;
+                this.kills = 0;
+                this.entities = { projectiles: [], enemies: [] };
+                this.cd = { blue: false, red: false, inf: false, purple: false };
+                this.state = { blue: false, red: false, inf: false, charging: false };
+                
+                this.dom.score.innerText = "0";
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('game-over').classList.add('hidden');
+                document.querySelectorAll('.enemy, .projectile').forEach(n => n.remove());
+                
+                this.updateHUD();
+                
+                if(this.loopId) cancelAnimationFrame(this.loopId);
+                if(this.spawnId) clearInterval(this.spawnId);
+                
+                this.loop();
+                this.spawnId = setInterval(() => this.spawnEnemy(), 1000);
+            },
+
+            shoot() {
+                AudioFX.shoot();
+                const el = document.createElement('div');
+                el.className = 'projectile';
+                el.style.top = (this.gojoY + 35) + 'px';
+                el.style.left = '90px';
+                this.dom.stage.appendChild(el);
+                this.entities.projectiles.push({ el, x: 90 });
+            },
+
+            useAbility(type, dur, cd) {
+                if(this.cd[type] || this.state.charging) return;
+                this.state[type] = true; 
+                this.cd[type] = true;
+                this.updateHUD();
+                
+                setTimeout(() => { 
+                    this.state[type] = false; 
+                    this.updateHUD();
+                }, dur);
+                
+                setTimeout(() => { 
+                    this.cd[type] = false; 
+                    this.updateHUD();
+                }, dur + cd);
+            },
+
+            useInfinity() {
+                if(this.cd.inf) return;
+                this.state.inf = true; this.cd.inf = true;
+                this.dom.gojo.classList.add('infinity-aura');
+                this.updateHUD();
+                
+                setTimeout(() => {
+                    this.state.inf = false;
+                    this.dom.gojo.classList.remove('infinity-aura');
+                    this.updateHUD();
+                }, 3000);
+                
+                setTimeout(() => { this.cd.inf = false; this.updateHUD(); }, 9000);
+            },
+
+            stopCharge() {
+                this.state.charging = false; this.charge = 0;
+                document.getElementById('charge-container').style.display = 'none';
+                const aura = document.querySelector('.charging-aura');
+                if(aura) aura.remove();
+            },
+
+            firePurple() {
+                this.stopCharge();
+                this.cd.purple = true;
+                this.updateHUD();
+                AudioFX.purple();
+                
+                const wave = document.getElementById('purple-wave');
+                wave.style.display = 'block';
+                wave.style.left = '-200px';
+
+                let pos = -200;
+                const interval = setInterval(() => {
+                    pos += 30; // Fast wave
+                    wave.style.left = pos + 'px';
+                    
+                    // Kill Logic
+                    for (let i = this.entities.enemies.length - 1; i >= 0; i--) {
+                        let e = this.entities.enemies[i];
+                        if(e.x < pos + 250) { // Hitbox of wave
+                            this.killEnemy(e, i);
+                        }
+                    }
+
+                    if(pos > 1100) {
+                        clearInterval(interval);
+                        wave.style.display = 'none';
+                    }
+                }, 16);
+
+                setTimeout(() => { this.cd.purple = false; this.updateHUD(); }, 15000);
+            },
+
+            spawnEnemy() {
+                if(!this.active) return;
+                const el = document.createElement('div');
+                el.className = 'enemy';
+                const y = Math.random() * 540;
+                el.style.top = y + 'px'; el.style.left = '900px';
+                this.dom.stage.appendChild(el);
+                this.entities.enemies.push({ el, x: 900, y });
+            },
+
+            killEnemy(e, i) {
+                if(e.el.parentNode) e.el.remove();
+                this.entities.enemies.splice(i, 1);
+                this.kills++;
+                this.dom.score.innerText = this.kills;
+                AudioFX.hit();
+            },
+
+            loop() {
+                if(!this.active) return;
+
+                // 1. Move Gojo
+                if(this.keys['w'] || this.keys['ArrowUp']) this.gojoY -= 7;
+                if(this.keys['s'] || this.keys['ArrowDown']) this.gojoY += 7;
+                this.gojoY = Math.max(0, Math.min(510, this.gojoY));
+                this.dom.gojo.style.top = this.gojoY + 'px';
+
+                // 2. Purple Charging
+                if(this.keys['4'] && !this.cd.purple) {
+                    if(!this.state.charging) {
+                        this.state.charging = true;
+                        document.getElementById('charge-container').style.display = 'block';
+                        const aura = document.createElement('div');
+                        aura.className = 'charging-aura';
+                        this.dom.gojo.appendChild(aura);
+                    }
+                    this.charge += 1.5;
+                    document.getElementById('charge-fill').style.width = this.charge + '%';
+                    if(this.charge >= 100) this.firePurple();
+                }
+
+                // 3. Cursor Visuals
+                if(this.state.blue) {
+                    this.dom.cursor.className = 'blue-mode';
+                    this.dom.cursor.style.left = this.mouseX + 'px';
+                    this.dom.cursor.style.top = this.mouseY + 'px';
+                    if(Math.random()>0.9) AudioFX.blue();
+                } else if(this.state.red) {
+                    this.dom.cursor.className = 'red-mode';
+                    this.dom.cursor.style.left = this.mouseX + 'px';
+                    this.dom.cursor.style.top = this.mouseY + 'px';
+                    if(Math.random()>0.9) AudioFX.red();
+                } else {
+                    this.dom.cursor.className = '';
+                }
+
+                // 4. Update Projectiles
+                for (let i = this.entities.projectiles.length - 1; i >= 0; i--) {
+                    let p = this.entities.projectiles[i];
+                    p.x += 15; 
+                    p.el.style.left = p.x + 'px';
+                    
+                    if(p.x > 950) { 
+                        p.el.remove(); 
+                        this.entities.projectiles.splice(i, 1); 
+                        continue; 
+                    }
+                    
+                    // Projectile hits Enemy
+                    for (let j = this.entities.enemies.length - 1; j >= 0; j--) {
+                        let e = this.entities.enemies[j];
+                        if(this.checkCol(p.el, e.el)) {
+                            p.el.remove(); 
+                            this.entities.projectiles.splice(i, 1);
+                            this.killEnemy(e, j);
+                            break;
+                        }
+                    }
+                }
+
+                // 5. Update Enemies (Reverse Loop to prevent flickering)
+                for (let i = this.entities.enemies.length - 1; i >= 0; i--) {
+                    let e = this.entities.enemies[i];
+                    let dx = -3 - (this.kills * 0.05); // Speed increases with score
+                    let dy = 0;
+
+                    // --- ABILITY PHYSICS ---
+                    if(this.state.blue || this.state.red) {
+                        // Calculate center of enemy (30px offset) vs mouse
+                        const enemyCX = e.x + 30;
+                        const enemyCY = e.y + 30;
+                        const distX = this.mouseX - enemyCX;
+                        const distY = this.mouseY - enemyCY;
+                        const dist = Math.sqrt(distX*distX + distY*distY);
+
+                        // --- INSTANT KILL ZONES (Updated Sizes) ---
+                        // Blue: 70px range (Close Pull)
+                        if(this.state.blue && dist < 70) { 
+                            this.killEnemy(e, i); 
+                            continue; 
+                        }
+                        // Red: 110px range (Big Blast - Kills before pushing away)
+                        if(this.state.red && dist < 110) { 
+                            this.killEnemy(e, i); 
+                            continue; 
+                        }
+
+                        // --- FORCE APPLICATION ---
+                        if(dist < 400) {
+                            const force = this.state.blue ? 10 : -20; // Red pushes VERY hard
+                            dx += (distX / dist) * force;
+                            dy += (distY / dist) * force;
+                        }
+                    }
+
+                    e.x += dx;
+                    e.y += dy;
+                    e.y = Math.max(0, Math.min(540, e.y));
+                    
+                    e.el.style.left = e.x + 'px';
+                    e.el.style.top = e.y + 'px';
+
+                    // Hit Gojo?
+                    if(this.checkCol(this.dom.gojo, e.el)) {
+                        if(this.state.inf) {
+                            this.killEnemy(e, i);
+                        } else {
+                            this.gameOver();
+                            break;
+                        }
+                    }
+                    
+                    // Off Screen?
+                    if(e.x < -100) {
+                        e.el.remove();
+                        this.entities.enemies.splice(i, 1);
+                    }
+                }
+
+                this.loopId = requestAnimationFrame(() => this.loop());
+            },
+
+            updateHUD() {
+                const set = (id, cd, readyCls, active) => {
+                    const el = document.getElementById(id);
+                    if(active) {
+                        el.className = "cd-text active-skill";
+                        el.style.opacity = "1";
+                    } else if(cd) {
+                        el.className = "cd-text";
+                        el.style.opacity = "0.3";
+                    } else {
+                        el.className = "cd-text " + readyCls;
+                        el.style.opacity = "1";
+                    }
+                };
+                set('cd-1', this.cd.blue, 'ready-blue', this.state.blue);
+                set('cd-2', this.cd.red, 'ready-red', this.state.red);
+                set('cd-3', this.cd.inf, 'ready-inf', this.state.inf);
+                set('cd-4', this.cd.purple, 'ready-purple', false);
+            },
+
+            checkCol(a, b) {
+                const r1 = a.getBoundingClientRect();
+                const r2 = b.getBoundingClientRect();
+                return !(r1.right < r2.left+15 || r1.left > r2.right-15 || r1.bottom < r2.top+15 || r1.top > r2.bottom-15);
+            },
+
+            gameOver() {
+                this.active = false;
+                clearInterval(this.spawnId);
+                cancelAnimationFrame(this.loopId);
+                document.getElementById('final-kills').innerText = this.kills;
+                document.getElementById('game-over').classList.remove('hidden');
+            }
+        };
+
+        Game.init();
+    </script>
+</body>
+</html>
